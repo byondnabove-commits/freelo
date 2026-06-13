@@ -1,0 +1,24 @@
+import type { Context, Next } from 'hono'
+import { auth } from '../auth'
+
+export async function requireAuth(c: Context, next: Next) {
+  const session = await auth.api.getSession({
+    headers: c.req.raw.headers,
+  })
+
+  if (!session) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+
+  c.set('user',    session.user)
+  c.set('session', session.session)
+  await next()
+}
+
+export async function requireOrg(c: Context, next: Next) {
+  const session = c.get('session')
+  if (!session?.activeOrganizationId) {
+    return c.json({ error: 'No active organization' }, 403)
+  }
+  await next()
+}
