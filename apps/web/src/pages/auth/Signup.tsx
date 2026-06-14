@@ -28,7 +28,6 @@ const signupSchema = z.object({
 )
 
 type SignupForm = z.infer<typeof signupSchema>
-
 export default function Signup() {
   const navigate  = useNavigate()
   const [loading, setLoading]   = useState(false)
