@@ -17,7 +17,7 @@ import { toast } from "sonner";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  
+
   // State for password change fields
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -64,14 +64,17 @@ export default function Dashboard() {
       });
 
       toast.success("Password updated successfully!");
-      
+
       // Reset form states and close modal
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
       setIsModalOpen(false);
-    } catch (error: any) {
-      const errorMsg = error?.message || "Failed to update password. Check your current password.";
+    } catch (error: unknown) {
+      const errorMsg =
+        error instanceof Error
+          ? error.message
+          : "Failed to update password. Check your current password.";
       toast.error(errorMsg);
     } finally {
       setLoading(false);
@@ -82,9 +85,7 @@ export default function Dashboard() {
     <div className="p-8 space-y-4">
       <h1 className="text-2xl font-bold">Dashboard</h1>
 
-      <p className="text-muted-foreground">
-        You're in. Onboarding next.
-      </p>
+      <p className="text-muted-foreground">You're in. Onboarding next.</p>
 
       <div className="flex gap-4">
         {/* Change Password Dialog */}
@@ -92,11 +93,12 @@ export default function Dashboard() {
           <DialogTrigger asChild>
             <Button variant="outline">Change Password</Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-106.25">
             <DialogHeader>
               <DialogTitle>Change Password</DialogTitle>
               <DialogDescription>
-                Update your account password. You'll need to enter your current credentials.
+                Update your account password. You'll need to enter your current
+                credentials.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleChangePassword} className="space-y-4 py-2">
@@ -123,7 +125,9 @@ export default function Dashboard() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirm-new-password">Confirm New Password</Label>
+                <Label htmlFor="confirm-new-password">
+                  Confirm New Password
+                </Label>
                 <Input
                   id="confirm-new-password"
                   type="password"
@@ -134,7 +138,11 @@ export default function Dashboard() {
                 />
               </div>
               <DialogFooter className="pt-2">
-                <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full sm:w-auto"
+                >
                   {loading ? "Updating..." : "Update Password"}
                 </Button>
               </DialogFooter>

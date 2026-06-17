@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { signIn } from "@/lib/auth-client";
 import { useAuthStore } from "@/store/auth.store";
 import { Button } from "@/components/ui/button";
@@ -29,10 +30,8 @@ export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { hasCompletedOnboarding } = useAuthStore();
-  const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
 
-  // Where to redirect after login
   const redirectTo = searchParams.get("redirectTo") ?? "/dashboard";
 
   const {
@@ -43,59 +42,44 @@ export default function Login() {
     resolver: zodResolver(loginSchema),
   });
 
-  const handleGoogleLogin = async () => {
-    await signIn.social({
-      provider: "google",
-        callbackURL: `${window.location.origin}/onboarding`,
-    });
-  };
-
-  const onSubmit = async (values: LoginForm) => {
-    await signIn.email(
-      {
+  // React Query Mutation handling Login Authentication Flow
+  const { mutate: handleLogin, isPending: loading } = useMutation({
+    mutationFn: async (values: LoginForm) => {
+      return await signIn.email({
         email: values.email.trim().toLowerCase(),
         password: values.password,
         rememberMe: true,
-      },
-      {
-        onRequest: () => setLoading(true),
+      });
+    },
+    onSuccess: () => {
+      toast.success("Welcome back!");
+      navigate(hasCompletedOnboarding ? redirectTo : "/onboarding", {
+        replace: true,
+      });
+    },
+    onError: (error) => {
+      const errorMsg =
+        error instanceof Error
+          ? error.message
+          : "Invalid email or password credentials.";
+      toast.error(errorMsg);
+    },
+  });
 
-        onSuccess: () => {
-          toast.success("Welcome back!");
-          // Go to onboarding if not set up yet
-          navigate(hasCompletedOnboarding ? redirectTo : "/onboarding", {
-            replace: true,
-          });
-        },
-
-        onError: (ctx) => {
-          setLoading(false);
-          // Better Auth returns specific error codes
-          const msg = ctx.error.message ?? "Invalid credentials";
-          toast.error(msg);
-        },
-      },
-    );
+  const handleGoogleLogin = async () => {
+    await signIn.social({
+      provider: "google",
+      callbackURL: `${window.location.origin}/onboarding`,
+    });
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center
-      justify-center bg-background p-4"
-    >
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-6">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2">
-          <div
-            className="w-8 h-8 bg-primary rounded-lg
-            flex items-center justify-center"
-          >
-            <span
-              className="text-primary-foreground
-              font-bold text-sm"
-            >
-              F
-            </span>
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <span className="text-primary-foreground font-bold text-sm">F</span>
           </div>
           <span className="text-xl font-bold">FreeLo</span>
         </div>
@@ -107,7 +91,10 @@ export default function Login() {
           </CardHeader>
 
           <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form
+              onSubmit={handleSubmit((data) => handleLogin(data))}
+              className="space-y-4"
+            >
               {/* Email */}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -127,15 +114,11 @@ export default function Login() {
 
               {/* Password */}
               <div className="space-y-2">
-                <div
-                  className="flex items-center
-                  justify-between"
-                >
+                <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
                   <Link
                     to="/forgot-password"
-                    className="text-xs text-primary
-                      hover:underline underline-offset-4"
+                    className="text-xs text-primary hover:underline underline-offset-4"
                   >
                     Forgot password?
                   </Link>
@@ -151,9 +134,7 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => setShowPass(!showPass)}
-                    className="absolute right-3 top-1/2
-                      -translate-y-1/2 text-muted-foreground
-                      hover:text-foreground transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showPass ? (
                       <EyeOff className="w-4 h-4" />
@@ -173,10 +154,7 @@ export default function Login() {
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? (
                   <>
-                    <Loader2
-                      className="w-4 h-4 mr-2
-                      animate-spin"
-                    />
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Signing in...
                   </>
                 ) : (
@@ -193,15 +171,11 @@ export default function Login() {
                 Continue with Google
               </Button>
 
-              <p
-                className="text-center text-sm
-                text-muted-foreground"
-              >
+              <p className="text-center text-sm text-muted-foreground">
                 Don't have an account?{" "}
                 <Link
                   to="/signup"
-                  className="text-primary font-medium
-                    hover:underline underline-offset-4"
+                  className="text-primary font-medium hover:underline underline-offset-4"
                 >
                   Create one
                 </Link>
