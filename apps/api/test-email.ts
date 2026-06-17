@@ -10,19 +10,12 @@ const transport = nodemailer.createTransport({
   },
 });
 
-export async function sendEmail({
-  to,
-  subject,
-  html,
-}: {
-  to: string;
-  subject: string;
-  html: string;
-}) {
-  await transport.sendMail({
+transport
+  .sendMail({
     from: '"FreeLo" <noreply@freelo.test>',
-    to,
-    subject,
-    html,
-  });
-}
+    to: "test@example.com",
+    subject: "Test",
+    html: "<p>Hello</p>",
+  })
+  .then((info) => console.log("Sent!", info))
+  .catch((err) => console.error("Error:", err));

@@ -10,12 +10,16 @@ import leadsRoutes from './routes/leads'
 const app = new Hono()
 
 // ── Middleware
+// ── Middleware
 app.use('*', logger())
-app.use('*', secureHeaders())
 app.use('*', cors({
   origin:      process.env.CLIENT_URL!,
   credentials: true,
 }))
+
+// Apply secureHeaders only to app routes, NOT /api/auth/**
+app.use('/api/leads/*', secureHeaders())
+app.use('/health', secureHeaders())
 
 // ── Better Auth — handles all /api/auth/* routes
 app.on(
