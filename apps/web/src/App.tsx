@@ -20,11 +20,10 @@ export default function App() {
         <Route path="/signup"       element={<Signup />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
 
-        {/* Onboarding — auth required, no org required */}
-        <Route path="/onboarding" element={<Onboarding />} />
 
         {/* Protected app */}
         <Route element={<PrivateRoute />}>
+        <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/" element={
             <Navigate to="/dashboard" replace />
