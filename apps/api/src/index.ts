@@ -36,6 +36,24 @@ app.get('/health', (c) =>
   c.json({ status: 'ok', time: new Date().toISOString() })
 )
 
+app.get('/api/protected', async (c) => {
+  const session = await auth.api.getSession({
+    headers: c.req.raw.headers,
+  })
+
+  if (!session) {
+    return c.json(
+      { error: 'Unauthorized' },
+      401
+    )
+  }
+
+  return c.json({
+    message: 'Protected route works',
+    user: session.user,
+  })
+})
+
 // ── Start
 const PORT = Number(process.env.PORT) || 3001
 serve({ fetch: app.fetch, port: PORT }, () => {

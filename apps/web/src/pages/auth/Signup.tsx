@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { signUp, signIn } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,9 +31,9 @@ const signupSchema = z
   });
 
 type SignupForm = z.infer<typeof signupSchema>;
+
 export default function Signup() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -44,59 +45,50 @@ export default function Signup() {
     resolver: zodResolver(signupSchema),
   });
 
-  const handleGoogleLogin = async () => {
-    await signIn.social({
-      provider: "google",
-        callbackURL: `${window.location.origin}/onboarding`,
-    });
-  };
-
-  const onSubmit = async (values: SignupForm) => {
-    await signUp.email(
-      {
+  // React Query Mutation wrapping Better Auth Promise
+  const { mutate: handleSignup, isPending: loading } = useMutation({
+    mutationFn: async (values: SignupForm) => {
+      return await signUp.email({
         name: values.name.trim(),
         email: values.email.trim().toLowerCase(),
         password: values.password,
         callbackURL: `${window.location.origin}/onboarding`,
-      },
-      {
-        onRequest: () => setLoading(true),
+      });
+    },
+    onSuccess: (_, variables) => {
+      toast.success("Account created!", {
+        description: "Check your email to verify your account.",
+      });
+      navigate("/verify-email", {
+        state: { email: variables.email.trim().toLowerCase() },
+      });
+    },
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === "string"
+          ? error
+          : "Something went wrong during registration.";
 
-        onSuccess: () => {
-          toast.success("Account created!", {
-            description: "Check your email to verify your account.",
-          });
-          navigate("/verify-email", {
-            state: { email: values.email.trim().toLowerCase() },
-          });
-        },
+      toast.error(message);
+    },
+  });
 
-        onError: (ctx) => {
-          setLoading(false);
-          toast.error(ctx.error.message ?? "Something went wrong");
-        },
-      },
-    );
+  const handleGoogleLogin = async () => {
+    await signIn.social({
+      provider: "google",
+      callbackURL: `${window.location.origin}/onboarding`,
+    });
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center
-      justify-center bg-background p-4"
-    >
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-6">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2">
-          <div
-            className="w-8 h-8 bg-primary rounded-lg
-            flex items-center justify-center"
-          >
-            <span
-              className="text-primary-foreground
-              font-bold text-sm"
-            >
-              F
-            </span>
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <span className="text-primary-foreground font-bold text-sm">F</span>
           </div>
           <span className="text-xl font-bold">FreeLo</span>
         </div>
@@ -112,7 +104,10 @@ export default function Signup() {
           </CardHeader>
 
           <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form
+              onSubmit={handleSubmit((data) => handleSignup(data))}
+              className="space-y-4"
+            >
               {/* Name */}
               <div className="space-y-2">
                 <Label htmlFor="name">Full name</Label>
@@ -160,9 +155,7 @@ export default function Signup() {
                   <button
                     type="button"
                     onClick={() => setShowPass(!showPass)}
-                    className="absolute right-3 top-1/2
-                      -translate-y-1/2 text-muted-foreground
-                      hover:text-foreground transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showPass ? (
                       <EyeOff className="w-4 h-4" />
@@ -192,9 +185,7 @@ export default function Signup() {
                   <button
                     type="button"
                     onClick={() => setShowConfirm(!showConfirm)}
-                    className="absolute right-3 top-1/2
-                      -translate-y-1/2 text-muted-foreground
-                      hover:text-foreground transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showConfirm ? (
                       <EyeOff className="w-4 h-4" />
@@ -226,8 +217,7 @@ export default function Signup() {
                 Already have an account?{" "}
                 <Link
                   to="/login"
-                  className="text-primary font-medium
-                    hover:underline underline-offset-4"
+                  className="text-primary font-medium hover:underline underline-offset-4"
                 >
                   Sign in
                 </Link>
@@ -244,17 +234,6 @@ export default function Signup() {
             </form>
           </CardContent>
         </Card>
-
-        <p className="text-center text-xs text-muted-foreground">
-          By creating an account you agree to our{" "}
-          <a href="#" className="underline underline-offset-4">
-            Terms
-          </a>{" "}
-          and{" "}
-          <a href="#" className="underline underline-offset-4">
-            Privacy Policy
-          </a>
-        </p>
       </div>
     </div>
   );
