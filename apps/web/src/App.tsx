@@ -1,22 +1,24 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { PrivateRoute } from "@/components/layout/PrivateRoute";
 import { GuestRoute } from "@/components/layout/GuestRoute";
-// Auth pages
+import { OrganizationGuard } from "@/components/layout/OrganizationGuard";
+
+// Views
 import Login from "@/pages/auth/Login";
 import Signup from "@/pages/auth/Signup";
 import VerifyEmail from "@/pages/auth/VerifyEmail";
 import ForgotPassword from "@/pages/auth/ForgotPassword";
 import ResetPassword from "@/pages/auth/ResetPassword";
-
-// App pages (placeholders for now)
 import Dashboard from "@/pages/dashboard/Dashboard";
-import Onboarding from "@/pages/auth/Onboarding";
+
+// Import the new production-grade 4-step modular layout folder
+import OnboardingWizard from "@/pages/auth/onboarding";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public */}
+        {/* --- Public Guest Routes --- */}
         <Route element={<GuestRoute />}>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
@@ -25,14 +27,19 @@ export default function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
         </Route>
 
-        {/* Protected app */}
+        {/* --- Guard Layer 1: Requires Authenticated Session --- */}
         <Route element={<PrivateRoute />}>
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          {/* Accessible only if authenticated but organization is missing */}
+          <Route path="/onboarding" element={<OnboardingWizard />} />
+
+          {/* --- Guard Layer 2: Requires Active Selected Workspace --- */}
+          <Route element={<OrganizationGuard />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          </Route>
         </Route>
 
-        {/* Fallback */}
+        {/* Global Fallback */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
