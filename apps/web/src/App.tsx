@@ -14,16 +14,20 @@ import ResetPassword from "@/pages/auth/ResetPassword";
 // Tenant Onboarding Flow Wizard Module
 import OnboardingWizard from "@/pages/auth/onboarding";
 
-// Core Panel Subview Screens
-import DashboardOverview from "@/pages/dashboard/Overview";
-import ProjectsPage from "@/pages/dashboard/Projects";
-import CRMPage from "@/pages/dashboard/CRM";
-import KanbanPage from "@/pages/dashboard/Kanban";
-import ProposalsPage from "@/pages/dashboard/Proposals";
-import ContractsPage from "@/pages/dashboard/Contracts";
-import FormsPage from "@/pages/dashboard/Forms";
-import SettingsPage from "@/pages/dashboard/Settings";
-import ProfilePage from "@/pages/dashboard/Profile";
+// Core Panel Subview Feature Folders (Resolves directly to index.tsx entries)
+import DashboardOverview from "@/pages/dashboard/overview";
+import ProjectsPage from "@/pages/dashboard/projects";
+import CRMPage from "@/pages/dashboard/CRM"; // Kept uppercase to match image_b9607.png exactly
+import LeadsPage from "@/pages/dashboard/leads"; // Added to handle your prospecting views
+import KanbanPage from "@/pages/dashboard/kanban";
+import ProposalsPage from "@/pages/dashboard/proposals";
+import ContractsPage from "@/pages/dashboard/contracts";
+import FormsPage from "@/pages/dashboard/forms";
+import SettingsPage from "@/pages/dashboard/settings";
+import ProfilePage from "@/pages/dashboard/profile";
+
+// External Client Facing Secure Portal Space
+import PortalPage from "@/pages/portal";
 
 export default function App() {
   return (
@@ -38,6 +42,11 @@ export default function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
         </Route>
 
+        {/* --- Public / Secure Token Client Portal Pipeline --- */}
+        {/* This sits completely outside the internal AppShell sidebar navigation framework */}
+        <Route path="/portal/:portalId" element={<PortalPage />} />
+        <Route path="/portal" element={<PortalPage />} />
+
         {/* --- Guard Layer 1: Requires Authenticated Session --- */}
         <Route element={<PrivateRoute />}>
           <Route path="/onboarding" element={<OnboardingWizard />} />
@@ -49,6 +58,7 @@ export default function App() {
               <Route index element={<DashboardOverview />} />
               <Route path="projects" element={<ProjectsPage />} />
               <Route path="crm" element={<CRMPage />} />
+              <Route path="leads" element={<LeadsPage />} />
               <Route path="kanban" element={<KanbanPage />} />
               <Route path="proposals" element={<ProposalsPage />} />
               <Route path="contracts" element={<ContractsPage />} />
