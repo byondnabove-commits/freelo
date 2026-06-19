@@ -34,7 +34,7 @@ export default function AppShell() {
               {/* Native responsive mobile panel viewport trigger switch primitive */}
               <SidebarTrigger className="p-2 text-slate-500 hover:bg-slate-50 rounded-xl" />
               {/* Shadcn Primitive Separator element component usage */}
-              <Separator orientation="vertical" className="h-4 hidden sm:block bg-slate-200" />
+              <Separator orientation="vertical" className=" hidden sm:block bg-slate-200" />
               <h1 className="text-base font-bold text-slate-800 tracking-tight select-none">
                 {getCurrentTitle()}
               </h1>

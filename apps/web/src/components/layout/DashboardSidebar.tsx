@@ -211,7 +211,7 @@ export function DashboardSidebar() {
 
       {/* --- Password Validation Dialog Overlay --- */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[425px] rounded-2xl">
+        <DialogContent className="sm:max-w-106.25 rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-slate-800">Change Password</DialogTitle>
             <DialogDescription className="text-slate-400 text-xs font-medium">
