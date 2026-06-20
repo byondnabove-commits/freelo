@@ -1,17 +1,17 @@
-# Database Architecture
+# FreeLo Database Architecture
 
 ## Purpose
 
-This document defines the database structure for FreeLo and the responsibilities of each entity.
+This document defines the database architecture for FreeLo and the responsibilities of each entity.
 
 The database is divided into two layers:
 
 1. Authentication Layer
 2. Business Layer
 
-Authentication is handled by Better Auth.
+Authentication is managed by Better Auth.
 
-Business entities are owned by FreeLo.
+Business entities are managed by FreeLo.
 
 ---
 
@@ -19,19 +19,22 @@ Business entities are owned by FreeLo.
 
 ## Single Source of Truth
 
-Business data must live in the database.
+Business state must always live in the database.
 
-The frontend must not be the source of truth for:
+The frontend must never be the source of truth for:
 
 * Authentication
-* Subscription status
 * Onboarding completion
+* Subscription status
 * Permissions
 * Workspace ownership
+* Team membership
+
+Frontend state is only a cache of backend state.
 
 ---
 
-## Organizations Own Data
+## Organization-Centric Architecture
 
 FreeLo is organization-centric.
 
@@ -39,27 +42,36 @@ All business data belongs to an organization.
 
 Examples:
 
-* Projects
 * Leads
 * Clients
-* Contracts
+* Projects
+* Tasks
+* Proposals
+* Invoices
 * Forms
-* AI Settings
-* Team Members
+* Services
+* AI Preferences
+* Notifications
 
-This allows support for:
+This architecture supports:
 
-* Solo freelancers
+* Solo Freelancers
 * Studios
 * Agencies
 
-using the same architecture.
+without requiring different database structures.
 
 ---
 
 # Authentication Layer
 
 Managed by Better Auth.
+
+Authentication answers:
+
+> Who is this user?
+
+---
 
 ## user
 
@@ -75,42 +87,52 @@ Responsibilities:
 
 * Identity
 * Authentication
-* Email verification
+* Email verification ownership
 
-A user may belong to one or more organizations.
+A user may belong to multiple organizations.
 
 ---
 
 ## session
 
-Represents an authenticated login session.
+Represents an authenticated session.
 
 Responsibilities:
 
 * Login state
 * Session expiration
 * Device tracking
+* Active organization tracking
 
-Must never be used as onboarding state.
+Must never store:
 
-Must never be used as subscription state.
+* Onboarding state
+* Subscription state
+* Business settings
 
 ---
 
 ## account
 
-OAuth and credentials provider linkage.
+Represents authentication providers.
 
 Examples:
 
-* Google
-* Email / Password
+* Email & Password
+* Google OAuth
+
+Responsibilities:
+
+* Provider linkage
+* OAuth credentials
 
 ---
 
 ## verification
 
-Stores:
+Stores verification records.
+
+Examples:
 
 * Email verification tokens
 * Password reset tokens
@@ -131,10 +153,15 @@ Responsibilities:
 
 * Data ownership boundary
 * Team container
+* Workspace identity
 
-An organization does not store onboarding data.
+An organization does not store:
 
-An organization does not store subscription data.
+* Onboarding data
+* Subscription data
+* AI settings
+
+Those belong to business tables.
 
 ---
 
@@ -150,10 +177,10 @@ Sarah → PXLR Studio
 
 Responsibilities:
 
-* Organization membership
+* Membership management
 * Role assignment
 
-Roles:
+Supported roles:
 
 * owner
 * admin
@@ -163,17 +190,28 @@ Roles:
 
 ## invitation
 
-Stores pending invitations.
+Represents pending invitations.
 
 Example:
 
 Sarah is invited to join PXLR Studio.
+
+Responsibilities:
+
+* Team onboarding
+* Membership invitations
 
 ---
 
 # Business Layer
 
 Managed by FreeLo.
+
+Business entities answer:
+
+> How does this organization operate?
+
+---
 
 ## organization_profile
 
@@ -183,9 +221,10 @@ Created during onboarding.
 
 Responsibilities:
 
-* Business profile
 * Freelancer profile
 * Studio profile
+* Business profile
+* AI matching context
 
 Fields include:
 
@@ -196,7 +235,7 @@ Fields include:
 * Work Style
 * Average Budget
 
-The existence of an organization profile indicates onboarding has been completed.
+The existence of an Organization Profile indicates onboarding has been completed.
 
 ---
 
@@ -210,10 +249,11 @@ Examples:
 * Branding
 * Development
 * Motion Design
+* UI/UX Design
 
-Services are used by:
+Responsibilities:
 
-* AI Matching
+* AI matching
 * Proposal generation
 * Lead qualification
 * Analytics
@@ -245,13 +285,247 @@ Responsibilities:
 * Team limits
 * Usage limits
 
-Subscription state must never be stored on the user.
-
 Subscription state belongs to the organization.
+
+Never to a user.
 
 ---
 
-# Organization Model
+# Forms System
+
+The Forms System powers client intake and AI lead qualification.
+
+---
+
+## forms
+
+Represents an intake form.
+
+Examples:
+
+* Project Inquiry
+* Discovery Call Form
+* Website Redesign Request
+* Branding Questionnaire
+
+Responsibilities:
+
+* Lead capture
+* Client onboarding
+* AI qualification entry point
+
+An organization may create multiple forms.
+
+---
+
+## form_fields
+
+Represents fields inside a form.
+
+Examples:
+
+* Company Name
+* Budget
+* Timeline
+* Project Description
+* Referral Source
+
+Responsibilities:
+
+* Dynamic form building
+* Drag-and-drop ordering
+* Field configuration
+
+Fields belong to a form.
+
+---
+
+## form_submissions
+
+Represents completed client responses.
+
+Responsibilities:
+
+* Store submitted answers
+* Feed AI qualification
+* Generate leads
+
+Answers are stored as JSON because forms are dynamic.
+
+Example:
+
+{
+"companyName": "Acme",
+"budget": "5000-10000",
+"timeline": "2 months"
+}
+
+---
+
+# CRM System
+
+---
+
+## leads
+
+Represents potential clients.
+
+Sources:
+
+* Form submissions
+* Manual creation
+* Future integrations
+
+Responsibilities:
+
+* Qualification
+* Lead scoring
+* Pipeline management
+
+AI qualification compares:
+
+* Organization Profile
+* Services
+* Average Budget
+
+against:
+
+* Form Submission Answers
+
+to determine lead quality.
+
+---
+
+## clients
+
+Represents approved leads that become clients.
+
+Responsibilities:
+
+* Client management
+* Relationship tracking
+* Portal access
+
+Clients may own multiple projects.
+
+---
+
+# Project Management
+
+---
+
+## projects
+
+Represents client work.
+
+Responsibilities:
+
+* Delivery management
+* Project tracking
+* Team collaboration
+
+Projects belong to an organization.
+
+Projects may be linked to a client.
+
+---
+
+## tasks
+
+Represents actionable work.
+
+Responsibilities:
+
+* Execution tracking
+* Internal planning
+* Progress monitoring
+
+Tasks belong to projects.
+
+---
+
+# Sales System
+
+---
+
+## proposals
+
+Represents proposals sent to clients.
+
+Responsibilities:
+
+* Offer presentation
+* Approval tracking
+* Client conversion
+
+Future features:
+
+* Proposal analytics
+* AI-generated proposals
+* Proposal templates
+
+---
+
+## invoices
+
+Represents billing records.
+
+Responsibilities:
+
+* Revenue tracking
+* Payment tracking
+* Financial reporting
+
+Future features:
+
+* Stripe integration
+* Recurring invoices
+* Automated reminders
+
+---
+
+# Communication System
+
+---
+
+## messages
+
+Represents communication records.
+
+Responsibilities:
+
+* Internal communication
+* Client communication
+* Activity history
+
+Messages may later power:
+
+* Client portals
+* Team collaboration
+* AI summaries
+
+---
+
+## notifications
+
+Represents in-app notifications.
+
+Responsibilities:
+
+* Activity alerts
+* System updates
+* Workflow notifications
+
+Examples:
+
+* Proposal viewed
+* Invoice paid
+* New lead received
+* Form submitted
+
+---
+
+# Organization Models
 
 ## Solo Freelancer
 
@@ -301,9 +575,9 @@ Subscription:
 
 * Agency
 
-No additional database structure is required.
+No database changes are required.
 
-Only limits and permissions change.
+Only permissions, limits, and billing change.
 
 ---
 
@@ -312,78 +586,46 @@ Only limits and permissions change.
 1. User signs up
 2. User verifies email
 3. Organization is created
-4. Organization Profile is created
-5. Services are created
-6. Subscription trial is created
-7. User enters dashboard
+4. Organization becomes active
+5. Organization Profile is created
+6. Services are created
+7. Trial Subscription is created
+8. User enters dashboard
 
 Result:
 
 User
 → Member
 → Organization
-→ OrganizationProfile
+→ Organization Profile
+→ Services
 → Subscription
 
----
+Onboarding completion is determined by the existence of an Organization Profile.
 
-# Future Tables
-
-These tables are expected in future releases.
-
-## projects
-
-Stores project records.
-
-Owned by an organization.
+The frontend must never store onboarding completion as the source of truth.
 
 ---
 
-## clients
+# AI Qualification Pipeline
 
-Stores client records.
+Future FreeLo AI workflows will follow:
 
-Owned by an organization.
+Form Submission
+→ AI Analysis
+→ Service Matching
+→ Budget Comparison
+→ Lead Score
+→ Lead Creation
 
----
+The AI evaluates:
 
-## leads
+* Services offered
+* Average budget range
+* Organization profile
+* Client requirements
 
-Stores lead records.
-
-Owned by an organization.
-
----
-
-## contracts
-
-Stores contracts.
-
-Owned by an organization.
-
----
-
-## forms
-
-Stores intake forms.
-
-Owned by an organization.
-
----
-
-## ai_preferences
-
-Stores AI behavior and matching settings.
-
-Owned by an organization.
-
----
-
-## notifications
-
-Stores in-app notifications.
-
-Owned by an organization.
+to determine lead quality and fit.
 
 ---
 
@@ -398,3 +640,7 @@ Business tables answer:
 "How does this organization operate?"
 
 These responsibilities must remain separated.
+
+Authentication should never contain business logic.
+
+Business tables should never contain authentication logic.

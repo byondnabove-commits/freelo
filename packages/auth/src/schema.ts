@@ -97,54 +97,6 @@ export const invitation = pgTable("invitation", {
 FREELO BUSINESS TABLES
 ========================================= */
 
-export const organizationProfile = pgTable("organization_profile", {
-  id: uuid("id").primaryKey().defaultRandom(),
-
-  organizationId: uuid("organization_id")
-    .notNull()
-    .unique()
-    .references(() => organization.id, {
-      onDelete: "cascade",
-    }),
-
-  ownerName: text("owner_name").notNull(),
-  professionalEmail: text("professional_email").notNull(),
-  timezone: text("timezone").notNull(),
-  currency: text("currency").notNull(),
-  workStyle: text("work_style").notNull(),
-  averageBudget: text("average_budget").notNull(),
-  onboardingCompletedAt: timestamp("onboarding_completed_at"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
-export const service = pgTable("service", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  organizationId: uuid("organization_id")
-    .notNull()
-    .references(() => organization.id, {
-      onDelete: "cascade",
-    }),
-  name: text("name").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
-
-export const subscription = pgTable("subscription", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  organizationId: uuid("organization_id")
-    .notNull()
-    .unique()
-    .references(() => organization.id, {
-      onDelete: "cascade",
-    }),
-  plan: text("plan").notNull().default("solo"),
-  status: text("status").notNull().default("trialing"),
-  currentPeriodStart: timestamp("current_period_start"),
-  currentPeriodEnd: timestamp("current_period_end"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
 export const authSchema = {
   user,
   session,
