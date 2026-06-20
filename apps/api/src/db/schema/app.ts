@@ -3,6 +3,7 @@ import {
   text,
   timestamp,
   boolean,
+  integer,
   date,
   jsonb,
   numeric,
@@ -191,4 +192,64 @@ export const subscription = pgTable("subscription", {
   currentPeriodEnd: timestamp("current_period_end"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const forms = pgTable("forms", {
+  id: uuid("id").primaryKey().defaultRandom(),
+
+  organizationId: uuid("organization_id")
+    .notNull()
+    .references(() => organization.id, {
+      onDelete: "cascade",
+    }),
+
+  name: text("name").notNull(),
+
+  description: text("description"),
+
+  slug: text("slug").notNull(),
+
+  isActive: boolean("is_active").notNull().default(true),
+
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const formFields = pgTable("form_fields", {
+  id: uuid("id").primaryKey().defaultRandom(),
+
+  formId: uuid("form_id")
+    .notNull()
+    .references(() => forms.id, {
+      onDelete: "cascade",
+    }),
+
+  type: text("type").notNull(),
+
+  label: text("label").notNull(),
+
+  placeholder: text("placeholder"),
+
+  required: boolean("required").notNull().default(false),
+
+  options: jsonb("options"),
+
+  position: integer("position").notNull(),
+
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const formSubmissions = pgTable("form_submissions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+
+  formId: uuid("form_id")
+    .notNull()
+    .references(() => forms.id, {
+      onDelete: "cascade",
+    }),
+
+  submittedAt: timestamp("submitted_at").notNull().defaultNow(),
+
+  answers: jsonb("answers").notNull().default({}),
 });
