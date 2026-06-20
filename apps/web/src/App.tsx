@@ -66,7 +66,7 @@ export default function App() {
               <Route path="settings" element={<SettingsPage />} />
               <Route path="profile" element={<ProfilePage />} />
             </Route>
-            
+
             {/* Redirect root domain requests straight to active analytics board */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
           </Route>
