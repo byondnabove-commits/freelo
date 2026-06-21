@@ -53,8 +53,8 @@ Better Auth tables:
 
 FreeLo business tables:
 
-* organization_profile
-* subscription
+* organization_profiles
+* subscriptions
 * leads
 * clients
 * projects
@@ -78,6 +78,8 @@ Register
 → Create Session
 → Create Organization
 → Create Membership (Owner)
+→ Create Default Subscription (Sketchbook, no trial)
+→ Seed Default Intake Form
 → Redirect To Onboarding
 
 ---
@@ -89,6 +91,8 @@ Google OAuth
 → Create Session
 → Create Organization
 → Create Membership (Owner)
+→ Create Default Subscription (Sketchbook, no trial)
+→ Seed Default Intake Form
 → Redirect To Onboarding
 
 ---
@@ -186,7 +190,7 @@ Every protected request must validate:
 1. Session
 2. Organization Membership
 3. Onboarding Status
-4. Permissions (future)
+4. Permissions
 
 Frontend checks are never trusted.
 
@@ -248,6 +252,7 @@ Protected areas:
 * Proposals
 * Invoices
 * Forms
+* Services
 
 Allowed:
 
@@ -256,17 +261,15 @@ Allowed:
 
 ---
 
-# Permissions (Future)
+# Permissions
 
 Role Based Access Control (RBAC)
 
 Roles:
 
-* owner
-* admin
-* manager
-* member
-* client
+owner
+admin
+member
 
 Permission examples:
 

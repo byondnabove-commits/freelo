@@ -277,6 +277,8 @@ Examples:
 
 /forms
 
+/services
+
 /tasks
 
 /proposals
@@ -288,9 +290,13 @@ Examples:
 
 # Onboarding API
 
+All onboarding endpoints live under `/onboarding/*` and are reachable before onboarding is complete (see `auth.md` Onboarding Middleware).
+
+Onboarding writes never go through the generic `/services` or `/forms` endpoints — those require completed onboarding. Instead, each step has its own dedicated endpoint below. Services and form fields touched here are real `services` / `forms` / `form_fields` records; the dedicated routes are just the onboarding-safe way to write them before the org is fully onboarded.
+
 ## GET /onboarding
 
-Returns onboarding state.
+Returns full onboarding state, including data needed to render every step without calling other resource endpoints.
 
 Response:
 
@@ -298,7 +304,15 @@ Response:
 {
   "currentStep": 2,
   "completed": false,
-  "profile": {}
+  "profile": {},
+  "work": {
+    "services": [],
+    "workStyle": "",
+    "averageBudget": ""
+  },
+  "intakeForm": {
+    "fields": []
+  }
 }
 ```
 
@@ -306,11 +320,31 @@ Response:
 
 ## PATCH /onboarding/profile
 
-Updates onboarding information.
+Step 1 — Studio.
+
+Updates Studio Name, Country, Timezone, Currency on `organization_profiles`.
+
+---
+
+## PATCH /onboarding/work
+
+Step 2 — Your Work.
+
+Updates selected services (creates/updates `services` records), work style, and average budget on `organization_profiles`.
+
+---
+
+## PATCH /onboarding/intake-form
+
+Step 3 — Intake Form.
+
+Toggles which fields of the seeded default intake form are enabled (updates `form_fields` on the organization's default form). Does not create new fields or new forms — see Forms API for full form building.
 
 ---
 
 ## POST /onboarding/complete
+
+Step 4 — Ready.
 
 Marks onboarding as completed.
 
@@ -690,7 +724,7 @@ Example:
 
 ```ts
 useQuery({
-  queryKey: ["projects"],
+  queryKey: ["organization", organizationId, "projects"],
   queryFn: getProjects,
 })
 ```

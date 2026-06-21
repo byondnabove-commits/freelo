@@ -120,6 +120,23 @@ Relationship:
 Organization
 → Subscription
 
+There is no trial. Every organization receives a Sketchbook subscription with `ACTIVE` status the moment the organization is created — before onboarding even starts. Upgrading to Studio happens later through `POST /subscription/checkout`.
+
+Subscription Enforcement
+
+Subscription limits are enforced
+at the application layer.
+
+Examples:
+
+- Team member limits
+- Active project limits
+- Storage limits
+
+RLS handles isolation.
+
+Subscription middleware handles limits.
+
 Subscription controls:
 
 * Limits

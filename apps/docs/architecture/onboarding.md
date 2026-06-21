@@ -15,9 +15,8 @@ organization_profile.completedAt is not null.
 The onboarding flow collects:
 
 * Studio information
-* Business profile
-* Qualification information
-* Default workspace configuration
+* Services offered and work style
+* Intake form field configuration
 
 The onboarding flow prepares the organization for first use.
 
@@ -61,55 +60,61 @@ Register
 
 ---
 
-# Step 1 – Studio Setup
+# Step 1 – Studio
 
 Collect:
 
-* Studio Name
-* Country
+* Logo
+* Owner Name
+* Professional Email
 * Timezone
 * Currency
+* Work Style
+* Average Budget
 
-Persist immediately.
+Persist immediately to `organization_profiles`.
 
 Do not wait until the final step.
 
 ---
 
-# Step 2 – Business Profile
+# Step 2 – Your Work
 
 Collect:
 
-* Industry
-* Team Size
-* Average Project Value
+* Services offered (multi-select, e.g. Brand Identity, Web Design, Development, UI/UX Design, Motion & Video, Photography, Copywriting, Social Media, Other)
+* Work style (single-select: Solo, Small Team, Subcontract Occasionally)
+* Average project budget (single-select range, e.g. Under $1,000 up to $15,000+)
 
-Persist immediately.
+Selected services are created as `services` records, owned by the organization.
 
-Do not store draft data in Zustand.
+Work style and average budget are persisted to `organization_profiles`.
 
----
+Persist immediately. Do not store draft selections in Zustand.
 
-# Step 3 – Intake Form Setup
-
-Create initial lead qualification form.
-
-Creates:
-
-* forms
-* form_fields
-
-records.
-
-This is product setup, not profile setup.
+Services chosen here are a starting point — the user can add, edit, or remove services later through the standalone Services feature.
 
 ---
 
-# Step 4 – Completion
+# Step 3 – Intake Form
+
+Every organization is seeded with one default intake form (and its default fields) automatically when the organization is created — see `organization.md`.
+
+This step does **not** build a form from scratch. It lets the user toggle which of the seeded default fields are enabled for their live form (e.g. turning off "Attach a brief" or "How did you find me?" if not needed).
+
+Required fields (e.g. Full name, Email address) cannot be disabled.
+
+This step only sets which fields are active — it is initial configuration, not form building.
+
+Full drag-and-drop form customization — adding new fields, reordering, deleting, creating additional forms — happens later through the standalone Forms feature, which uses dnd-kit and is a separate, more powerful editor than this toggle list.
+
+---
+
+# Step 4 – Ready
 
 User clicks:
 
-Explore Dashboard
+Finish the Setup
 
 System:
 
@@ -224,7 +229,6 @@ Business data must remain in the database.
 
 The onboarding flow may later include:
 
-* Subscription setup
 * Team invitations
 * Calendar integration
 * CRM import

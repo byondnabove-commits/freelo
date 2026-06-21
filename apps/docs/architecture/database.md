@@ -163,6 +163,8 @@ An organization does not store:
 
 Those belong to business tables.
 
+See `organization.md` for the full organization architecture.
+
 ---
 
 ## member
@@ -182,9 +184,9 @@ Responsibilities:
 
 Supported roles:
 
-* owner
-* admin
-* member
+owner
+admin
+member
 
 ---
 
@@ -213,7 +215,7 @@ Business entities answer:
 
 ---
 
-## organization_profile
+## organization_profiles
 
 Represents the business identity of an organization.
 
@@ -228,6 +230,7 @@ Responsibilities:
 
 Fields include:
 
+* Logo
 * Owner Name
 * Professional Email
 * Timezone
@@ -235,11 +238,11 @@ Fields include:
 * Work Style
 * Average Budget
 
-The existence of an Organization Profile indicates onboarding has been completed.
+The completion of setting up an Organization Profile indicates onboarding has been completed.
 
 ---
 
-## service
+## services
 
 Represents a service offered by an organization.
 
@@ -262,19 +265,18 @@ An organization may have many services.
 
 ---
 
-## subscription
+## subscriptions
 
 Represents the billing relationship.
 
 Plans:
 
-* solo
-* studio
-* agency
+* SKETCHBOOK
+* STUDIO
+
 
 Statuses:
 
-* trialing
 * active
 * canceled
 * past_due
@@ -490,6 +492,8 @@ Future features:
 
 ## messages
 
+> Not MVP / V1. Planned for a later phase — no API exists for this table yet (see `api.md`).
+
 Represents communication records.
 
 Responsibilities:
@@ -527,57 +531,9 @@ Examples:
 
 # Organization Models
 
-## Solo Freelancer
+FreeLo supports Solo Freelancer, Studio, and Agency-sized organizations without requiring different database structures — only team size, usage, and billing change.
 
-Organization:
-
-* PXLR Studio
-
-Members:
-
-* Abdou
-
-Subscription:
-
-* Solo
-
----
-
-## Studio
-
-Organization:
-
-* PXLR Studio
-
-Members:
-
-* Abdou
-* Designer
-* Project Manager
-
-Subscription:
-
-* Studio
-
----
-
-## Agency
-
-Organization:
-
-* Creative Labs
-
-Members:
-
-* Multiple team members
-
-Subscription:
-
-* Agency
-
-No database changes are required.
-
-Only permissions, limits, and billing change.
+See `organization.md` for the canonical definition of organization models and example breakdowns.
 
 ---
 
@@ -586,10 +542,10 @@ Only permissions, limits, and billing change.
 1. User signs up
 2. User verifies email
 3. Organization is created
-4. Organization becomes active
-5. Organization Profile is created
-6. Services are created
-7. Trial Subscription is created
+4. A default Sketchbook subscription is created for the organization (no trial)
+5. A default intake form with default fields is seeded for the organization
+6. User completes onboarding steps (Studio → Your Work → Intake Form → Ready)
+7. Organization Profile is marked complete (`completedAt`)
 8. User enters dashboard
 
 Result:
@@ -597,13 +553,16 @@ Result:
 User
 → Member
 → Organization
-→ Organization Profile
-→ Services
 → Subscription
+→ Default Intake Form
+→ Organization Profile (Studio info, Services, Work Style)
+→ Onboarding Complete
 
-Onboarding completion is determined by the existence of an Organization Profile.
+Onboarding completion is determined by the existence of a completed Organization Profile (`completedAt`), not by the existence of a subscription or intake form — those exist from the moment the organization is created.
 
 The frontend must never store onboarding completion as the source of truth.
+
+See `onboarding.md` for the full step-by-step breakdown.
 
 ---
 

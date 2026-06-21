@@ -451,11 +451,9 @@ This prevents cache pollution between organizations.
 
 Roles:
 
-* owner
-* admin
-* manager
-* member
-* client
+owner
+admin
+member
 
 Permissions will be enforced at the application layer.
 
