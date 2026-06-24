@@ -11,12 +11,13 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { organization } from "./auth";
+import { textDecoder } from "drizzle-orm";
 
 // We reference organization from better-auth tables
 // better-auth cli will generate those — we just reference by string here
 export const leads = pgTable("leads", {
   id: uuid("id").primaryKey().defaultRandom(),
-  orgId: uuid("org_id")
+  orgId: text("org_id")
     .notNull()
     .references(() => organization.id, {
       onDelete: "cascade",
@@ -36,12 +37,12 @@ export const leads = pgTable("leads", {
 
 export const clients = pgTable("clients", {
   id: uuid("id").primaryKey().defaultRandom(),
-  orgId: uuid("org_id")
+  orgId: text("org_id")
     .notNull()
     .references(() => organization.id, {
       onDelete: "cascade",
     }),
-  leadId: text("lead_id"),
+  leadId: uuid("lead_id").references(() => leads.id),
   name: text("name").notNull(),
   email: text("email").notNull(),
   company: text("company"),
@@ -56,12 +57,12 @@ export const clients = pgTable("clients", {
 
 export const projects = pgTable("projects", {
   id: uuid("id").primaryKey().defaultRandom(),
-  orgId: uuid("org_id")
+  orgId: text("org_id")
     .notNull()
     .references(() => organization.id, {
       onDelete: "cascade",
     }),
-  clientId: text("client_id"),
+  clientId: uuid("client_id"),
   name: text("name").notNull(),
   description: text("description"),
   stage: text("stage").notNull().default("inquiry"),
@@ -80,7 +81,7 @@ export const tasks = pgTable("tasks", {
 
 export const proposals = pgTable("proposals", {
   id: uuid("id").primaryKey().defaultRandom(),
-  orgId: uuid("org_id")
+  orgId: text("org_id")
     .notNull()
     .references(() => organization.id, {
       onDelete: "cascade",
@@ -102,7 +103,7 @@ export const proposals = pgTable("proposals", {
 
 export const invoices = pgTable("invoices", {
   id: uuid("id").primaryKey().defaultRandom(),
-  oorgId: uuid("org_id")
+  orgId: text("org_id")
     .notNull()
     .references(() => organization.id, {
       onDelete: "cascade",
@@ -133,7 +134,7 @@ export const messages = pgTable("messages", {
 
 export const notifications = pgTable("notifications", {
   id: uuid("id").primaryKey().defaultRandom(),
-  orgId: uuid("org_id")
+  orgId: text("org_id")
     .notNull()
     .references(() => organization.id, {
       onDelete: "cascade",
@@ -149,27 +150,37 @@ export const notifications = pgTable("notifications", {
 export const organizationProfile = pgTable("organization_profile", {
   id: uuid("id").primaryKey().defaultRandom(),
 
-  organizationId: uuid("organization_id")
+  organizationId: text("organization_id")
     .notNull()
     .unique()
     .references(() => organization.id, {
       onDelete: "cascade",
     }),
 
+  logo: text("logo"),
+
   ownerName: text("owner_name").notNull(),
+
   professionalEmail: text("professional_email").notNull(),
+
   timezone: text("timezone").notNull(),
+
   currency: text("currency").notNull(),
-  workStyle: text("work_style").notNull(),
+
+  teamCount: text("team_count").notNull(),
+
   averageBudget: text("average_budget").notNull(),
+
   onboardingCompletedAt: timestamp("onboarding_completed_at"),
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
+
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const service = pgTable("service", {
   id: uuid("id").primaryKey().defaultRandom(),
-  organizationId: uuid("organization_id")
+  organizationId: text("organization_id")
     .notNull()
     .references(() => organization.id, {
       onDelete: "cascade",
@@ -180,14 +191,14 @@ export const service = pgTable("service", {
 
 export const subscription = pgTable("subscription", {
   id: uuid("id").primaryKey().defaultRandom(),
-  organizationId: uuid("organization_id")
+  organizationId: text("organization_id")
     .notNull()
     .unique()
     .references(() => organization.id, {
       onDelete: "cascade",
     }),
-  plan: text("plan").notNull().default("solo"),
-  status: text("status").notNull().default("trialing"),
+  plan: text("plan").notNull().default("sketchbook"),
+  status: text("status").notNull().default("active"),
   currentPeriodStart: timestamp("current_period_start"),
   currentPeriodEnd: timestamp("current_period_end"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -197,7 +208,7 @@ export const subscription = pgTable("subscription", {
 export const forms = pgTable("forms", {
   id: uuid("id").primaryKey().defaultRandom(),
 
-  organizationId: uuid("organization_id")
+  organizationId: text("organization_id")
     .notNull()
     .references(() => organization.id, {
       onDelete: "cascade",
