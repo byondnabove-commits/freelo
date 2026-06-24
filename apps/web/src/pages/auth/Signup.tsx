@@ -52,7 +52,7 @@ export default function Signup() {
         name: values.name.trim(),
         email: values.email.trim().toLowerCase(),
         password: values.password,
-        callbackURL: `${window.location.origin}/onboarding`,
+        callbackURL: `${window.location.origin}/`,
       });
     },
     onSuccess: (_, variables) => {
@@ -68,8 +68,8 @@ export default function Signup() {
         error instanceof Error
           ? error.message
           : typeof error === "string"
-          ? error
-          : "Something went wrong during registration.";
+            ? error
+            : "Something went wrong during registration.";
 
       toast.error(message);
     },
@@ -78,7 +78,7 @@ export default function Signup() {
   const handleGoogleLogin = async () => {
     await signIn.social({
       provider: "google",
-      callbackURL: `${window.location.origin}/onboarding`,
+      callbackURL: `${window.location.origin}/`,
     });
   };
 

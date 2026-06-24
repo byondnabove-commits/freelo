@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { signIn } from "@/lib/auth-client";
-import { useAuthStore } from "@/store/auth.store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,11 +27,9 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { hasCompletedOnboarding } = useAuthStore();
   const [showPass, setShowPass] = useState(false);
 
-  const redirectTo = searchParams.get("redirectTo") ?? "/dashboard";
+  // const redirectTo = searchParams.get("redirectTo") ?? "/dashboard";
 
   const {
     register,
@@ -51,17 +48,22 @@ export default function Login() {
         rememberMe: true,
       });
     },
+
     onSuccess: () => {
       toast.success("Welcome back!");
-      navigate(hasCompletedOnboarding ? redirectTo : "/onboarding", {
+
+      // Let AuthBootstrap decide where to send the user
+      navigate("/", {
         replace: true,
       });
     },
+
     onError: (error) => {
       const errorMsg =
         error instanceof Error
           ? error.message
           : "Invalid email or password credentials.";
+
       toast.error(errorMsg);
     },
   });
@@ -69,7 +71,7 @@ export default function Login() {
   const handleGoogleLogin = async () => {
     await signIn.social({
       provider: "google",
-      callbackURL: `${window.location.origin}/onboarding`,
+      callbackURL: `${window.location.origin}/`,
     });
   };
 

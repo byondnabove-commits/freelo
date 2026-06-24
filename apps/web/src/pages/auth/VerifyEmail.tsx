@@ -23,7 +23,7 @@ export default function VerifyEmail() {
     setResending(true);
 
     await authClient.sendVerificationEmail(
-      { email, callbackURL: `${window.location.origin}/onboarding` },
+      { email, callbackURL: `${window.location.origin}/` },
       {
         onSuccess: () => {
           toast.success("Verification email resent!");
