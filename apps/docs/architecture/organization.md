@@ -35,9 +35,9 @@ No business record is shared across organizations.
 
 ## Organization Is Managed By Better Auth
 
-The `organization` table itself, along with membership and invitations, is owned by Better Auth.
+The `organization` table itself, along with memberships and invitations, is owned by Better Auth.
 
-FreeLo adds business context on top of the organization via `organization_profiles` and other business tables.
+FreeLo adds business context on top of the organization through business tables such as organization profiles, subscriptions, services, forms, projects, and invoices.
 
 ```txt
 Better Auth owns:
@@ -46,10 +46,12 @@ member
 invitation
 
 FreeLo owns:
-organization_profiles
-subscriptions
-services
+organization_profile
+subscription
+service
 forms
+form_fields
+form_submissions
 leads
 clients
 projects
@@ -70,7 +72,8 @@ The frontend never decides:
 
 * Which organization is active
 * Whether onboarding is complete
-* What the organization can access
+* What subscription is active
+* What permissions a user has
 
 These are always derived from the database.
 
@@ -78,7 +81,9 @@ These are always derived from the database.
 
 # Organization vs Organization Profile
 
-These are two distinct entities and must not be confused.
+These are two distinct entities and must never be confused.
+
+---
 
 ## organization (Better Auth)
 
@@ -89,24 +94,52 @@ Responsibilities:
 * Workspace existence
 * Team container
 * Membership boundary
+* Workspace name
+* Workspace logo
 
 Created automatically during registration.
 
+Example:
+
+```txt
+Organization
+├── id
+├── name
+├── slug
+└── logo
+```
+
 ---
 
-## organization_profiles (FreeLo)
+## organization_profile (FreeLo)
 
-Represents the business identity of the organization.
+Represents business configuration.
 
 Responsibilities:
 
-* Freelancer / studio profile
-* AI matching context
+* Owner information
+* Business information
+* Team information
 * Onboarding completion marker
 
-Created during onboarding, not at registration.
+Created only after onboarding is completed.
 
-An organization can exist without an `organization_profiles` record — that organization is simply not yet onboarded.
+An organization can exist without an organization profile.
+
+That organization is considered not onboarded.
+
+Example:
+
+```txt
+Organization Profile
+├── ownerName
+├── professionalEmail
+├── timezone
+├── currency
+├── teamCount
+├── averageBudget
+└── onboardingCompletedAt
+```
 
 ---
 
@@ -117,20 +150,46 @@ Register
 → Create User
 → Create Organization
 → Create Membership (Owner)
-→ Create Default Subscription (Sketchbook, no trial)
-→ Seed Default Intake Form
+→ Create Default Subscription (Sketchbook)
 → Redirect To Onboarding
-→ Step 1: Studio Info → Organization Profile
-→ Step 2: Services + Work Style → Services + Organization Profile
-→ Step 3: Enable/Disable Default Intake Form Fields
-→ Step 4: Mark Organization Profile Complete
+
+Step 1
+→ Studio Information
+→ Update Organization
+→ Store Onboarding Draft
+
+Step 2
+→ Services
+→ Team Count
+→ Average Budget
+→ Store Onboarding Draft
+
+Step 3
+→ Select Intake Form Fields
+→ Create Default Intake Form
+→ Create Form Fields
+
+Step 4
+→ Create Organization Profile
+→ Mark Onboarding Complete
+→ Redirect To Dashboard
 ```
 
-The organization, its default subscription, and its default intake form are all created immediately at registration — before onboarding starts.
+The organization and default subscription are created immediately after registration.
 
-The organization profile is filled in, and services are created, during onboarding.
+The organization profile is created only after onboarding is completed.
 
-See `onboarding.md` for the full onboarding flow and `subscriptions.md` for subscription plans.
+The intake form is created during onboarding after the user selects which fields should be enabled.
+
+An organization can exist without:
+
+* organization_profile
+* services
+* forms
+
+while onboarding is in progress.
+
+See `onboarding.md` for the full onboarding flow.
 
 ---
 
@@ -138,7 +197,7 @@ See `onboarding.md` for the full onboarding flow and `subscriptions.md` for subs
 
 A membership connects a user to an organization.
 
-Examples:
+Example:
 
 ```txt
 Abdou  → Owner  → PXLR Studio
@@ -153,17 +212,17 @@ admin
 member
 ```
 
-A user may belong to more than one organization.
+A user may belong to multiple organizations.
 
-A session tracks which organization is currently active.
+The active organization is determined by the authenticated session.
 
 ---
 
 # Resolving Organization Context
 
-The client never sends an organization identifier.
+The client never supplies an organization identifier.
 
-Organization context is always derived server-side:
+Organization context is always derived server-side.
 
 ```txt
 Session
@@ -171,7 +230,9 @@ Session
 → Organization
 ```
 
-This resolution happens in the Organization Middleware, which then attaches context for downstream handlers:
+This resolution occurs inside Organization Middleware.
+
+The middleware attaches context to downstream handlers:
 
 ```ts
 ctx.set("organization", organization)
@@ -179,7 +240,9 @@ ctx.set("member", member)
 ctx.set("organizationId", organization.id)
 ```
 
-See `multi-tenancy.md` for the full middleware stack and RLS enforcement.
+This ensures that all application data remains tenant-scoped.
+
+See `multi-tenancy.md` for middleware and PostgreSQL RLS enforcement.
 
 ---
 
@@ -201,15 +264,54 @@ Organization
 └── Notifications
 ```
 
-Every table in this list contains `organization_id` and is scoped by it.
+Every business entity belongs to exactly one organization.
+
+Some tables store `organization_id` directly:
+
+```txt
+organization_profile
+subscription
+service
+forms
+leads
+clients
+projects
+proposals
+invoices
+notifications
+```
+
+Other tables inherit organization ownership through parent relationships:
+
+```txt
+tasks
+→ projects
+→ organization
+
+messages
+→ projects
+→ organization
+
+form_fields
+→ forms
+→ organization
+
+form_submissions
+→ forms
+→ organization
+```
 
 ---
 
 # Organization Models
 
-FreeLo supports three organization sizes without requiring different database structures.
+FreeLo supports different organization sizes without changing the database schema.
 
-Only team size, usage, and billing change — never the schema.
+Only limits, usage, and billing change.
+
+The data model remains identical.
+
+---
 
 ## Solo Freelancer
 
@@ -225,7 +327,11 @@ Subscription: Sketchbook
 
 ```txt
 Organization: PXLR Studio
-Members:      Abdou, Designer, Project Manager
+Members:
+- Abdou
+- Designer
+- Project Manager
+
 Subscription: Studio
 ```
 
@@ -235,20 +341,92 @@ Subscription: Studio
 
 ```txt
 Organization: Creative Labs
-Members:      Multiple team members
+
+Members:
+- Multiple Designers
+- Multiple Developers
+- Project Managers
+- Account Managers
+
 Subscription: Studio
 ```
 
-Agencies use the same Studio plan as smaller studios — there is no separate "Agency" plan. Only team size, usage, and billing scale; the database structure does not change.
+Agencies use the same Studio plan.
+
+Only usage, limits, and team size increase.
+
+The schema never changes.
+
+---
+
+# Organization Bootstrap
+
+After authentication the application loads organization context through:
+
+```http
+GET /api/me
+```
+
+Response includes:
+
+```json
+{
+  "user": {},
+  "organization": {},
+  "member": {},
+  "organizationProfile": {},
+  "subscription": {}
+}
+```
+
+This endpoint becomes the source of truth for:
+
+* Current organization
+* Current membership
+* Onboarding status
+* Subscription status
+
+The frontend must never infer these values itself.
+
+---
+
+# Onboarding Detection
+
+An organization is considered onboarded when:
+
+```txt
+organization_profile.onboardingCompletedAt != null
+```
+
+Rules:
+
+```txt
+organization_profile = null
+→ Not Onboarded
+
+organization_profile exists
+and onboardingCompletedAt = null
+→ Not Onboarded
+
+organization_profile exists
+and onboardingCompletedAt != null
+→ Onboarded
+```
+
+This is the only supported onboarding check.
 
 ---
 
 # Architectural Principles
 
-* An organization is the single tenant boundary for all business data.
-* `organization` (identity) and `organization_profiles` (business profile) are separate concerns.
-* The organization is created at registration; the profile is created during onboarding.
+* An organization is the tenant boundary for all business data.
+* Better Auth owns workspace identity and membership.
+* FreeLo owns business configuration and business data.
+* Organization and Organization Profile are separate concerns.
+* Organizations are created during registration.
+* Organization Profiles are created during onboarding.
 * The client never supplies an organization identifier.
-* Organization context is always derived from the authenticated session and membership.
-* Organization size (Solo, Studio, Agency) changes billing and limits only — never the schema.
+* Organization context is always derived from the authenticated session.
 * Database is the source of truth.
+* Organization size affects limits and billing only.
+* The schema remains identical for all organization sizes.

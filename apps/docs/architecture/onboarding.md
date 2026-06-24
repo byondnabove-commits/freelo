@@ -83,12 +83,12 @@ Do not wait until the final step.
 Collect:
 
 * Services offered (multi-select, e.g. Brand Identity, Web Design, Development, UI/UX Design, Motion & Video, Photography, Copywriting, Social Media, Other)
-* Work style (single-select: Solo, Small Team, Subcontract Occasionally)
+* Team count (single-select: Solo, Small Team, Subcontract Occasionally)
 * Average project budget (single-select range, e.g. Under $1,000 up to $15,000+)
 
 Selected services are created as `services` records, owned by the organization.
 
-Work style and average budget are persisted to `organization_profiles`.
+Team count and average budget are persisted to `organization_profiles`.
 
 Persist immediately. Do not store draft selections in Zustand.
 

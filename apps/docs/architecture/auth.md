@@ -11,13 +11,18 @@ Authentication is responsible for:
 * Google OAuth login
 * Email verification
 * Session management
-* Organization membership
-* Organization invitations
+* Identity management
+
+Workspace access is managed through:
+
+* Organizations
+* Memberships
+* Invitations
 
 Authentication is NOT responsible for:
 
 * Onboarding progress
-* Subscription status
+* Business configuration
 * Business data
 * Application permissions
 
@@ -35,7 +40,12 @@ Never use:
 * localStorage
 * sessionStorage
 
-as the source of truth for authentication.
+as the source of truth for:
+
+* Authentication
+* Onboarding
+* Subscription status
+* Organization membership
 
 ---
 
@@ -51,17 +61,33 @@ Better Auth tables:
 * member
 * invitation
 
-FreeLo business tables:
+Purpose:
+
+* Identity
+* Sessions
+* Organizations
+* Memberships
+* Invitations
+
+---
+
+## FreeLo Owns Business Data
+
+FreeLo tables:
 
 * organization_profiles
 * subscriptions
+* services
+* forms
+* form_fields
+* form_submissions
 * leads
 * clients
 * projects
 * tasks
 * proposals
 * invoices
-* forms
+* notifications
 
 Authentication data and business data must remain separated.
 
@@ -78,9 +104,13 @@ Register
 → Create Session
 → Create Organization
 → Create Membership (Owner)
-→ Create Default Subscription (Sketchbook, no trial)
-→ Seed Default Intake Form
-→ Redirect To Onboarding
+→ Create Default Subscription (Sketchbook)
+→ Redirect To Application
+
+Application Bootstrap
+→ GET /me
+→ Determine Onboarding Status
+→ Redirect To Onboarding Or Dashboard
 
 ---
 
@@ -91,9 +121,13 @@ Google OAuth
 → Create Session
 → Create Organization
 → Create Membership (Owner)
-→ Create Default Subscription (Sketchbook, no trial)
-→ Seed Default Intake Form
-→ Redirect To Onboarding
+→ Create Default Subscription (Sketchbook)
+→ Redirect To Application
+
+Application Bootstrap
+→ GET /me
+→ Determine Onboarding Status
+→ Redirect To Onboarding Or Dashboard
 
 ---
 
@@ -101,20 +135,63 @@ Google OAuth
 
 Login
 → Create Session
-→ Load User Context
-→ Check Onboarding Status
-→ Redirect
+→ Redirect To Application
+
+Application Bootstrap
+→ GET /me
+→ Determine Onboarding Status
+→ Redirect To Onboarding Or Dashboard
 
 Rules:
 
 * If onboarding incomplete → /onboarding
 * If onboarding complete → /dashboard
 
+The login flow does not determine onboarding status.
+
+GET /me determines onboarding status.
+
+---
+
+# Session Lifecycle
+
+## Session Creation
+
+Sessions are created by:
+
+* Email login
+* Google OAuth login
+* Email verification (autoSignInAfterVerification)
+
+---
+
+## Session Refresh
+
+Session refresh is handled automatically by Better Auth.
+
+---
+
+## Session Expiration
+
+Expired sessions require re-authentication.
+
+Users are redirected to login.
+
+---
+
+## Session Destruction
+
+Sessions are destroyed when:
+
+* User logs out
+* Account is deleted
+* Session is revoked
+
 ---
 
 # Session Bootstrap
 
-After login, the frontend loads the current user context.
+After authentication, the frontend loads application context.
 
 Endpoint:
 
@@ -127,12 +204,42 @@ Response:
   "user": {},
   "organization": {},
   "member": {},
-  "profile": {},
+  "organizationProfile": {},
   "subscription": {}
 }
 ```
 
-This endpoint becomes the primary source of application state after authentication.
+GET /me is responsible for:
+
+* Authentication bootstrap
+* Organization bootstrap
+* Membership bootstrap
+* Onboarding status
+* Subscription state
+
+GET /me is the primary source of application state after authentication.
+
+The frontend should call GET /me immediately after application startup.
+
+---
+
+# Onboarding Source Of Truth
+
+Onboarding completion is determined by:
+
+organization_profile.completedAt
+
+Rules:
+
+completedAt = null
+
+→ Onboarding Incomplete
+
+completedAt != null
+
+→ Onboarding Complete
+
+The existence of an organization_profile record does not indicate onboarding completion.
 
 ---
 
@@ -142,7 +249,7 @@ Frontend guards improve user experience.
 
 Frontend guards do NOT provide security.
 
-Required guards:
+---
 
 ## Guest Guard
 
@@ -153,7 +260,7 @@ Allowed:
 
 If authenticated:
 
-→ Redirect to dashboard or onboarding
+→ Redirect to onboarding or dashboard
 
 ---
 
@@ -162,8 +269,9 @@ If authenticated:
 Requires:
 
 * Valid session
+* Active organization
 
-If no session:
+If requirements fail:
 
 → Redirect to login
 
@@ -173,7 +281,7 @@ If no session:
 
 Requires:
 
-* organization_profile.completedAt
+organization_profile.completedAt != null
 
 If onboarding incomplete:
 
@@ -205,6 +313,8 @@ Request
 → Permission Middleware
 → Route Handler
 
+Permission Middleware is optional during MVP development.
+
 ---
 
 # Session Middleware
@@ -228,10 +338,17 @@ Purpose:
 
 Verify organization membership.
 
+Responsibilities:
+
+* Resolve active organization
+* Resolve membership
+* Verify membership exists
+
 Adds:
 
 * organization
 * member
+* organizationId
 
 to request context.
 
@@ -243,10 +360,11 @@ Purpose:
 
 Prevent access to application features until onboarding is complete.
 
-Protected areas:
+Protected Areas:
 
 * CRM
 * Leads
+* Clients
 * Projects
 * Tasks
 * Proposals
@@ -261,15 +379,15 @@ Allowed:
 
 ---
 
-# Permissions
+# Permissions (optional for mvp)
 
-Role Based Access Control (RBAC)
+FreeLo uses Role Based Access Control (RBAC).
 
 Roles:
 
-owner
-admin
-member
+* owner
+* admin
+* member
 
 Permission examples:
 
@@ -279,21 +397,30 @@ Permission examples:
 * members.invite
 * billing.manage
 
-Permissions will be enforced by backend middleware.
+Permissions are enforced by backend middleware.
 
 ---
 
 # State Ownership
 
-React Query:
+## React Query
+
+Owns:
 
 * session
 * user
 * organization
-* profile
+* member
+* organizationProfile
 * subscription
 
-Zustand:
+React Query manages all server state.
+
+---
+
+## Zustand
+
+Owns:
 
 * sidebar
 * modals
@@ -309,7 +436,9 @@ Never store server state in Zustand.
 
 * Never trust frontend state.
 * Never trust route guards.
-* Always validate organization ownership.
 * Always validate session server-side.
-* All business queries must be organization-scoped.
+* Always validate organization membership.
+* Always validate organization ownership.
+* All business queries must be organization scoped.
 * Database is the source of truth.
+* PostgreSQL RLS is the final security boundary.
