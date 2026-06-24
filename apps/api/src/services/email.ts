@@ -19,10 +19,17 @@ export async function sendEmail({
   subject: string;
   html: string;
 }) {
-  await transport.sendMail({
+  console.log("Sending email to:", to);
+
+  const result = await transport.sendMail({
     from: '"FreeLo" <noreply@freelo.test>',
     to,
     subject,
     html,
   });
+
+  console.log("Mailtrap result:", result);
+
+  return result;
+
 }
