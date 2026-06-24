@@ -1,63 +1,168 @@
-import 'dotenv/config'
-import { Hono } from 'hono'
-import { serve } from '@hono/node-server'
-import { cors } from 'hono/cors'
-import { logger } from 'hono/logger'
-import { secureHeaders } from 'hono/secure-headers'
-import { auth } from './auth'
-import leadsRoutes from './routes/leads'
+import "dotenv/config";
 
-const app = new Hono()
+import { Hono } from "hono";
+import { serve } from "@hono/node-server";
+import { cors } from "hono/cors";
+import { logger } from "hono/logger";
+import { secureHeaders } from "hono/secure-headers";
 
-// ── Middleware
-// ── Middleware
-app.use('*', logger())
-app.use('*', cors({
-  origin:      process.env.CLIENT_URL!,
-  credentials: true,
-}))
+import { auth } from "./auth";
 
-// Apply secureHeaders only to app routes, NOT /api/auth/**
-app.use('/api/leads/*', secureHeaders())
-app.use('/health', secureHeaders())
+import leadsRoutes from "./routes/leads";
 
-// ── Better Auth — handles all /api/auth/* routes
-app.on(
-  ['GET', 'POST'],
-  '/api/auth/**',
-  (c) => auth.handler(c.req.raw)
-)
+// -----------------------------------------------------------------------------
+// Types
+// -----------------------------------------------------------------------------
 
-// ── App routes
-app.route('/api/leads', leadsRoutes)
+type AppVariables = {
+  user: typeof auth.$Infer.Session.user | null;
 
-// ── Health check
-app.get('/health', (c) =>
-  c.json({ status: 'ok', time: new Date().toISOString() })
-)
+  session:
+    | (typeof auth.$Infer.Session.session & {
+        activeOrganizationId?: string | null;
+      })
+    | null;
+};
 
-app.get('/api/protected', async (c) => {
-  const session = await auth.api.getSession({
+const app = new Hono<{
+  Variables: AppVariables;
+}>();
+
+// -----------------------------------------------------------------------------
+// Global Middleware
+// -----------------------------------------------------------------------------
+
+app.use("*", logger());
+
+app.use(
+  "*",
+  cors({
+    origin: process.env.CLIENT_URL!,
+    credentials: true,
+
+    allowMethods: [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS",
+    ],
+
+    allowHeaders: [
+      "Content-Type",
+      "Authorization",
+    ],
+  }),
+);
+
+// -----------------------------------------------------------------------------
+// Better Auth Session Bootstrap
+// -----------------------------------------------------------------------------
+
+app.use("*", async (c, next) => {
+  const result = await auth.api.getSession({
     headers: c.req.raw.headers,
-  })
+  });
 
-  if (!session) {
+  if (!result) {
+    c.set("user", null);
+    c.set("session", null);
+
+    await next();
+    return;
+  }
+
+  c.set("user", result.user);
+  c.set("session", result.session);
+
+  await next();
+});
+
+// -----------------------------------------------------------------------------
+// Better Auth Routes
+// -----------------------------------------------------------------------------
+
+app.on(
+  ["GET", "POST"],
+  "/api/auth/*",
+  (c) => auth.handler(c.req.raw),
+);
+
+app.get("/debug-env", (c) => {
+  return c.json({
+    betterAuthUrl: process.env.BETTER_AUTH_URL,
+    clientUrl: process.env.CLIENT_URL,
+    googleClientId: !!process.env.GOOGLE_CLIENT_ID,
+    googleSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+  });
+});
+// -----------------------------------------------------------------------------
+// Security Headers
+// -----------------------------------------------------------------------------
+
+app.use("/api/me", secureHeaders());
+app.use("/api/leads/*", secureHeaders());
+app.use("/health", secureHeaders());
+
+// -----------------------------------------------------------------------------
+// Health Check
+// -----------------------------------------------------------------------------
+
+app.get("/health", (c) =>
+  c.json({
+    status: "ok",
+    time: new Date().toISOString(),
+  }),
+);
+
+// -----------------------------------------------------------------------------
+// Temporary Session Debug Route
+// Remove after GET /me is implemented
+// -----------------------------------------------------------------------------
+
+app.get("/api/session", async (c) => {
+  const user = c.get("user");
+  const session = c.get("session");
+
+  if (!user || !session) {
     return c.json(
-      { error: 'Unauthorized' },
-      401
-    )
+      {
+        error: "Unauthorized",
+      },
+      401,
+    );
   }
 
   return c.json({
-    message: 'Protected route works',
-    user: session.user,
-  })
-})
+    user,
+    session,
+  });
+});
 
-// ── Start
-const PORT = Number(process.env.PORT) || 3001
-serve({ fetch: app.fetch, port: PORT }, () => {
-  console.log(`API → http://localhost:${PORT}`)
-})
+// -----------------------------------------------------------------------------
+// Feature Routes
+// -----------------------------------------------------------------------------
 
-export type AppType = typeof app
+app.route("/api/leads", leadsRoutes);
+
+
+// -----------------------------------------------------------------------------
+// Server
+// -----------------------------------------------------------------------------
+
+const PORT = Number(process.env.PORT) || 3001;
+
+serve(
+  {
+    fetch: app.fetch,
+    port: PORT,
+  },
+  () => {
+    console.log(
+      `🚀 API running on http://localhost:${PORT}`,
+    );
+  },
+);
+
+export type AppType = typeof app;
