@@ -5,29 +5,29 @@ import { OrganizationGuard } from "@/components/layout/OrganizationGuard";
 import AppShell from "@/components/layout/AppShell";
 
 // Guest Authentication Views
-import Login from "@/pages/auth/Login";
-import Signup from "@/pages/auth/Signup";
-import VerifyEmail from "@/pages/auth/VerifyEmail";
-import ForgotPassword from "@/pages/auth/ForgotPassword";
-import ResetPassword from "@/pages/auth/ResetPassword";
+import Login from "@/features/auth/pages/Login";
+import Signup from "@/features/auth/pages/Signup";
+import VerifyEmail from "@/features/auth/pages/VerifyEmail";
+import ForgotPassword from "@/features/auth/pages/ForgotPassword";
+import ResetPassword from "@/features/auth/pages/ResetPassword";
 
 // Tenant Onboarding Flow Wizard Module
-import OnboardingWizard from "@/pages/auth/onboarding";
+import OnboardingWizard from "@/features/auth/onboarding";
 
 // Core Panel Subview Feature Folders (Resolves directly to index.tsx entries)
-import DashboardOverview from "@/pages/dashboard/overview";
-import ProjectsPage from "@/pages/dashboard/projects";
-import CRMPage from "@/pages/dashboard/CRM"; // Kept uppercase to match image_b9607.png exactly
-import LeadsPage from "@/pages/dashboard/leads"; // Added to handle your prospecting views
-import KanbanPage from "@/pages/dashboard/kanban";
-import ProposalsPage from "@/pages/dashboard/proposals";
-import ContractsPage from "@/pages/dashboard/contracts";
-import FormsPage from "@/pages/dashboard/forms";
-import SettingsPage from "@/pages/dashboard/settings";
-import ProfilePage from "@/pages/dashboard/profile";
+import DashboardOverview from "@/features/overview";
+import ProjectsPage from "@/features/projects";
+import CRMPage from "@/features/CRM"; // Kept uppercase to match image_b9607.png exactly
+import LeadsPage from "@/features/leads"; // Added to handle your prospecting views
+import KanbanPage from "@/features/kanban";
+import ProposalsPage from "@/features/proposals";
+import ContractsPage from "@/features/contracts";
+import FormsPage from "@/features/forms";
+import SettingsPage from "@/features/settings";
+import ProfilePage from "@/features/profile";
 
 // External Client Facing Secure Portal Space
-import PortalPage from "@/pages/portal";
+import PortalPage from "@/features/portal";
 
 export default function App() {
   return (
