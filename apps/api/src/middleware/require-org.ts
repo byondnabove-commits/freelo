@@ -69,6 +69,7 @@ export const requireOrg = createMiddleware<AuthEnv & OrgEnv>(
 
     c.set("organization", currentOrganization);
     c.set("member", currentMember);
+    c.set("organizationId", organizationId);
 
     await next();
   },
