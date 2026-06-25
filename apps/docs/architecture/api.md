@@ -335,10 +335,9 @@ Updates selected services (creates/updates `services` records), work style, and 
 ---
 
 ## PATCH /onboarding/intake-form
-
 Step 3 — Intake Form.
 
-Toggles which fields of the seeded default intake form are enabled (updates `form_fields` on the organization's default form). Does not create new fields or new forms — see Forms API for full form building.
+Creates the organization's default intake form and its default fields, based on which fields the user enabled in this step (creates `forms` and `form_fields` records). This is the only place the default form is created — see Forms API for full form building afterward.
 
 ---
 

@@ -5,28 +5,17 @@ import { serve } from "@hono/node-server";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { secureHeaders } from "hono/secure-headers";
+import type { AppEnv } from "@/types/hono";
 
 import { auth } from "./auth";
 
 import leadsRoutes from "./routes/leads";
-
+import meRoutes from "./routes/me";
 // -----------------------------------------------------------------------------
 // Types
 // -----------------------------------------------------------------------------
 
-type AppVariables = {
-  user: typeof auth.$Infer.Session.user | null;
-
-  session:
-    | (typeof auth.$Infer.Session.session & {
-        activeOrganizationId?: string | null;
-      })
-    | null;
-};
-
-const app = new Hono<{
-  Variables: AppVariables;
-}>();
+const app = new Hono<AppEnv>();
 
 // -----------------------------------------------------------------------------
 // Global Middleware
@@ -40,19 +29,9 @@ app.use(
     origin: process.env.CLIENT_URL!,
     credentials: true,
 
-    allowMethods: [
-      "GET",
-      "POST",
-      "PUT",
-      "PATCH",
-      "DELETE",
-      "OPTIONS",
-    ],
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 
-    allowHeaders: [
-      "Content-Type",
-      "Authorization",
-    ],
+    allowHeaders: ["Content-Type", "Authorization"],
   }),
 );
 
@@ -83,20 +62,8 @@ app.use("*", async (c, next) => {
 // Better Auth Routes
 // -----------------------------------------------------------------------------
 
-app.on(
-  ["GET", "POST"],
-  "/api/auth/*",
-  (c) => auth.handler(c.req.raw),
-);
+app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
-app.get("/debug-env", (c) => {
-  return c.json({
-    betterAuthUrl: process.env.BETTER_AUTH_URL,
-    clientUrl: process.env.CLIENT_URL,
-    googleClientId: !!process.env.GOOGLE_CLIENT_ID,
-    googleSecret: !!process.env.GOOGLE_CLIENT_SECRET,
-  });
-});
 // -----------------------------------------------------------------------------
 // Security Headers
 // -----------------------------------------------------------------------------
@@ -121,35 +88,39 @@ app.get("/health", (c) =>
 // Remove after GET /me is implemented
 // -----------------------------------------------------------------------------
 
-app.get("/api/session", async (c) => {
-  const user = c.get("user");
-  const session = c.get("session");
+// app.get("/api/session", async (c) => {
+//   const user = c.get("user");
+//   const session = c.get("session");
 
-  if (!user || !session) {
-    return c.json(
-      {
-        error: "Unauthorized",
-      },
-      401,
-    );
-  }
+//   if (!user || !session) {
+//     return c.json(
+//       {
+//         error: "Unauthorized",
+//       },
+//       401,
+//     );
+//   }
 
-  return c.json({
-    user,
-    session,
-  });
-});
+//   return c.json({
+//     user,
+//     session,
+//   });
+// });
 
 // -----------------------------------------------------------------------------
 // Feature Routes
 // -----------------------------------------------------------------------------
 
 app.route("/api/leads", leadsRoutes);
-
+app.route("/api/me", meRoutes);
 
 // -----------------------------------------------------------------------------
 // Server
 // -----------------------------------------------------------------------------
+app.onError((err, c) => {
+  console.error(err); // or your logger
+  return c.json({ error: "Internal Server Error" }, 500);
+});
 
 const PORT = Number(process.env.PORT) || 3001;
 
@@ -159,9 +130,7 @@ serve(
     port: PORT,
   },
   () => {
-    console.log(
-      `🚀 API running on http://localhost:${PORT}`,
-    );
+    console.log(`🚀 API running on http://localhost:${PORT}`);
   },
 );
 

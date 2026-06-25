@@ -98,13 +98,13 @@ Services chosen here are a starting point — the user can add, edit, or remove 
 
 # Step 3 – Intake Form
 
-Every organization is seeded with one default intake form (and its default fields) automatically when the organization is created — see `organization.md`.
+This step creates the organization's default intake form and its default fields — see `organization.md`.
 
-This step does **not** build a form from scratch. It lets the user toggle which of the seeded default fields are enabled for their live form (e.g. turning off "Attach a brief" or "How did you find me?" if not needed).
+This step does **not** offer full form building. It presents a fixed set of default fields and lets the user toggle which ones are enabled on the form being created (e.g. turning off "Attach a brief" or "How did you find me?" if not needed).
 
 Required fields (e.g. Full name, Email address) cannot be disabled.
 
-This step only sets which fields are active — it is initial configuration, not form building.
+This step only creates the form and sets which fields are active — it is initial configuration, not the full form builder.
 
 Full drag-and-drop form customization — adding new fields, reordering, deleting, creating additional forms — happens later through the standalone Forms feature, which uses dnd-kit and is a separate, more powerful editor than this toggle list.
 

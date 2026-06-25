@@ -543,10 +543,10 @@ See `organization.md` for the canonical definition of organization models and ex
 2. User verifies email
 3. Organization is created
 4. A default Sketchbook subscription is created for the organization (no trial)
-5. A default intake form with default fields is seeded for the organization
-6. User completes onboarding steps (Studio → Your Work → Intake Form → Ready)
-7. Organization Profile is marked complete (`completedAt`)
-8. User enters dashboard
+5. User completes onboarding steps (Studio → Your Work → Intake Form → Ready)
+   - During the Intake Form step, a default intake form with default fields is created for the organization
+6. Organization Profile is marked complete (`completedAt`)
+7. User enters dashboard
 
 Result:
 
@@ -554,11 +554,11 @@ User
 → Member
 → Organization
 → Subscription
-→ Default Intake Form
 → Organization Profile (Studio info, Services, Work Style)
+→ Default Intake Form (created during onboarding)
 → Onboarding Complete
 
-Onboarding completion is determined by the existence of a completed Organization Profile (`completedAt`), not by the existence of a subscription or intake form — those exist from the moment the organization is created.
+Onboarding completion is determined by the existence of a completed Organization Profile (`completedAt`), not by the existence of a subscription or intake form. The subscription exists from the moment the organization is created; the intake form is created during onboarding's Intake Form step.
 
 The frontend must never store onboarding completion as the source of truth.
 
