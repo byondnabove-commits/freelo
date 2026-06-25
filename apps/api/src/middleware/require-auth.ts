@@ -8,7 +8,15 @@ export const requireAuth = createMiddleware<AppEnv & AuthEnv>(
     const session = c.get("session");
 
     if (!user || !session) {
-      return c.json({ code: "UNAUTHORIZED", message: "Unauthorized" }, 401);
+      return c.json(
+        {
+          error: {
+            code: "UNAUTHORIZED",
+            message: "Unauthorized",
+          },
+        },
+        401,
+      );
     }
 
     await next();
