@@ -11,6 +11,7 @@ import { auth } from "./auth";
 
 import leadsRoutes from "./routes/leads";
 import meRoutes from "./routes/me";
+import onboardingRoutes from "./routes/onboarding";
 // -----------------------------------------------------------------------------
 // Types
 // -----------------------------------------------------------------------------
@@ -71,6 +72,24 @@ app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 app.use("/api/me", secureHeaders());
 app.use("/api/leads/*", secureHeaders());
 app.use("/health", secureHeaders());
+app.use("/api/onboarding", secureHeaders());
+
+
+// -----------------------------------------------------------------------------
+// Feature Routes
+// -----------------------------------------------------------------------------
+
+app.route("/api/leads", leadsRoutes);
+app.route("/api/me", meRoutes);
+app.route("/api/onboarding", onboardingRoutes);
+
+// -----------------------------------------------------------------------------
+// Server
+// -----------------------------------------------------------------------------
+app.onError((err, c) => {
+  console.error(err); // or your logger
+  return c.json({ error: "Internal Server Error" }, 500);
+});
 
 // -----------------------------------------------------------------------------
 // Health Check
@@ -83,44 +102,6 @@ app.get("/health", (c) =>
   }),
 );
 
-// -----------------------------------------------------------------------------
-// Temporary Session Debug Route
-// Remove after GET /me is implemented
-// -----------------------------------------------------------------------------
-
-// app.get("/api/session", async (c) => {
-//   const user = c.get("user");
-//   const session = c.get("session");
-
-//   if (!user || !session) {
-//     return c.json(
-//       {
-//         error: "Unauthorized",
-//       },
-//       401,
-//     );
-//   }
-
-//   return c.json({
-//     user,
-//     session,
-//   });
-// });
-
-// -----------------------------------------------------------------------------
-// Feature Routes
-// -----------------------------------------------------------------------------
-
-app.route("/api/leads", leadsRoutes);
-app.route("/api/me", meRoutes);
-
-// -----------------------------------------------------------------------------
-// Server
-// -----------------------------------------------------------------------------
-app.onError((err, c) => {
-  console.error(err); // or your logger
-  return c.json({ error: "Internal Server Error" }, 500);
-});
 
 const PORT = Number(process.env.PORT) || 3001;
 
