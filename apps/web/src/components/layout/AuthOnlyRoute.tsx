@@ -1,8 +1,9 @@
+// components/layout/AuthOnlyRoute.tsx
 import { useSession } from '@/lib/auth-client'
-import { useAuth } from '@/features/auth/hooks/useAuth' // wherever your useAuth from earlier lives
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import { Navigate, Outlet } from 'react-router-dom'
 
-export function PrivateRoute() {
+export function AuthOnlyRoute() {
   const { data: session, isPending: sessionPending } = useSession()
   const { isOnboarded, isLoading: authLoading } = useAuth()
 
@@ -18,8 +19,8 @@ export function PrivateRoute() {
     return <Navigate to="/login" replace />
   }
 
-  if (!isOnboarded) {
-    return <Navigate to="/onboarding" replace />
+  if (isOnboarded) {
+    return <Navigate to="/dashboard" replace />
   }
 
   return <Outlet />
