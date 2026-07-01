@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 import { onboardingSchema, STEP_FIELDS, type OnboardingData } from "./schema";
+import { api } from "@/lib/api";
 
 // Sub-step imports...
 import { StepOne } from "./step-one";
@@ -43,31 +44,42 @@ export default function OnboardingWizard() {
 
   const { trigger, handleSubmit } = methods;
 
-  // src/pages/auth/onboarding/index.tsx
+  const queryClient = useQueryClient();
 
   const { mutate: submitOnboarding, isPending } = useMutation({
     mutationFn: async (data: OnboardingData) => {
-      // 1. Create the workspace context securely within Better Auth
       const orgResult = await authClient.organization.create({
         name: data.studioName,
         slug: data.studioName.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
       });
-
       if (orgResult.error) throw new Error(orgResult.error.message);
 
-      // 2. CRITICAL FIX: Explicitly set this new workspace as active for the session.
-      // This feeds the session data directly into your OrganizationGuard,
-      // ensuring it clears you for passage to the dashboard.
       const setActiveResult = await authClient.organization.setActive({
         organizationId: orgResult.data.id,
       });
+      const session = await authClient.getSession();
 
+      console.log(session);
+      console.log(setActiveResult);
       if (setActiveResult.error) throw new Error(setActiveResult.error.message);
+
+      await api.post("/api/onboarding", {
+        fullName: data.fullName,
+        timezone: data.timezone,
+        professionalEmail: data.professionalEmail,
+        currency: data.currency,
+        logoUrl: data.logoUrl,
+        services: data.services,
+        workStyle: data.workStyle,
+        averageBudget: data.averageBudget,
+        intakeFields: data.intakeFields,
+      });
 
       return orgResult.data;
     },
-    onSuccess: () => {
-      setStep(4); // Safely advance into your Success Confirmation layout screen
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["me"] });
+      setStep(4);
     },
   });
 

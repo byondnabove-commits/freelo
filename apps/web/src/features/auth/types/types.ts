@@ -10,14 +10,14 @@ export type MeResponse = {
     name: string;
     slug: string;
     logo: string | null;
-  };
+  } | null;
 
   member: {
     id: string;
     role: string;
     organizationId: string;
     userId: string;
-  };
+  } | null;
 
   organizationProfile: {
     id: string;
@@ -29,4 +29,8 @@ export type MeResponse = {
     plan: string;
     status: string;
   } | null;
+
+  isOnboarded: boolean;
+
+  requiresOrganizationSelection?: boolean;
 };

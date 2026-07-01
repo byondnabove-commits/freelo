@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { signIn } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,9 +27,8 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [showPass, setShowPass] = useState(false);
-
-  // const redirectTo = searchParams.get("redirectTo") ?? "/dashboard";
 
   const {
     register,
@@ -39,7 +38,6 @@ export default function Login() {
     resolver: zodResolver(loginSchema),
   });
 
-  // React Query Mutation handling Login Authentication Flow
   const { mutate: handleLogin, isPending: loading } = useMutation({
     mutationFn: async (values: LoginForm) => {
       return await signIn.email({
@@ -49,13 +47,14 @@ export default function Login() {
       });
     },
 
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Welcome back!");
 
-      // Let AuthBootstrap decide where to send the user
-      navigate("/", {
-        replace: true,
-      });
+      // Force a fresh read of /me for THIS session — don't trust any cached data
+      // from a previous user/session that might still be sitting in the cache
+      await queryClient.invalidateQueries({ queryKey: ["me"] });
+
+      navigate("/", { replace: true });
     },
 
     onError: (error) => {
@@ -63,7 +62,6 @@ export default function Login() {
         error instanceof Error
           ? error.message
           : "Invalid email or password credentials.";
-
       toast.error(errorMsg);
     },
   });

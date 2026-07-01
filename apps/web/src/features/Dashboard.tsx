@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { signOut, authClient } from "@/lib/auth-client";
+import { useQueryClient } from "@tanstack/react-query";
+
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +19,7 @@ import { toast } from "sonner";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // State for password change fields
   const [currentPassword, setCurrentPassword] = useState("");
@@ -29,6 +32,11 @@ export default function Dashboard() {
     await signOut({
       fetchOptions: {
         onSuccess: () => {
+          // Wipe ALL cached queries, not just ["me"] — otherwise leftover
+          // leads/projects/etc. from this session can leak into the next
+          // login on the same tab, and "me" specifically would cause the
+          // exact stale-onboarding-state bug you just hit
+          queryClient.clear();
           toast.success("Logged out");
           navigate("/login", { replace: true });
         },

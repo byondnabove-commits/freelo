@@ -8,7 +8,7 @@ export function useAuth() {
 
     isAuthenticated: !!query.data?.user,
 
-    isOnboarded: !!query.data?.organizationProfile?.onboardingCompletedAt,
+    isOnboarded: query.data?.isOnboarded ?? false,
 
     user: query.data?.user,
 
