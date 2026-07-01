@@ -218,7 +218,7 @@ export const forms = pgTable("forms", {
 
   description: text("description"),
 
-  slug: text("slug").notNull(),
+  slug: text("slug").notNull().unique(),
 
   isActive: boolean("is_active").notNull().default(true),
 

@@ -117,7 +117,8 @@ CREATE TABLE "forms" (
 	"slug" text NOT NULL,
 	"is_active" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "forms_slug_unique" UNIQUE("slug")
 );
 --> statement-breakpoint
 CREATE TABLE "invoices" (

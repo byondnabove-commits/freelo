@@ -1,5 +1,5 @@
 {
-  "id": "0e7f4329-f42e-4b5c-8c19-3e415b368193",
+  "id": "4925f2bd-66da-4481-a2a7-955360bb78bc",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -983,7 +983,15 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "forms_slug_unique": {
+          "name": "forms_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "slug"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
