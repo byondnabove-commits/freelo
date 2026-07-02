@@ -1,18 +1,32 @@
-// middleware/require-org.ts
 import { createMiddleware } from "hono/factory";
-import { and, eq } from "drizzle-orm";
-import { db } from "@/db";
-import { organization, member } from "@/db/schema/auth";
+
+import { getOrganizationContext } from "@/lib/auth/organization-context";
 import type { AuthEnv, OrgEnv } from "@/types/hono";
 
 export const requireOrg = createMiddleware<AuthEnv & OrgEnv>(
   async (c, next) => {
-    const session = c.get("session");
     const user = c.get("user");
+    const session = c.get("session");
 
-    const organizationId = session.activeOrganizationId;
+    const context = await getOrganizationContext(user, session);
 
-    if (!organizationId) {
+    if (context.requiresOrganizationSelection) {
+      return c.json(
+        {
+          error: {
+            code: "ORGANIZATION_SELECTION_REQUIRED",
+            message: "Organization selection required",
+          },
+        },
+        409,
+      );
+    }
+
+    if (
+      !context.organization ||
+      !context.member ||
+      !context.organizationId
+    ) {
       return c.json(
         {
           error: {
@@ -24,52 +38,9 @@ export const requireOrg = createMiddleware<AuthEnv & OrgEnv>(
       );
     }
 
-    const [currentMember] = await db
-      .select()
-      .from(member)
-      .where(
-        and(
-          eq(member.organizationId, organizationId),
-          eq(member.userId, user.id),
-        ),
-      )
-      .limit(1);
-
-    // critical: don't trust activeOrganizationId blindly — confirm membership still exists
-    if (!currentMember) {
-      return c.json(
-        {
-          error: {
-            code: "FORBIDDEN",
-            message: "Forbidden",
-          },
-        },
-        403,
-      );
-    }
-
-
-    const [currentOrganization] = await db
-      .select()
-      .from(organization)
-      .where(eq(organization.id, organizationId))
-      .limit(1);
-
-   if (!currentOrganization) {
-      return c.json(
-        {
-          error: {
-            code: "ORGANIZATION_NOT_FOUND",
-            message: "Organization not found",
-          },
-        },
-        404,
-      );
-    }
-
-    c.set("organization", currentOrganization);
-    c.set("member", currentMember);
-    c.set("organizationId", organizationId);
+    c.set("organization", context.organization);
+    c.set("member", context.member);
+    c.set("organizationId", context.organizationId);
 
     await next();
   },
