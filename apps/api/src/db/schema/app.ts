@@ -157,7 +157,13 @@ export const organizationProfile = pgTable("organization_profile", {
       onDelete: "cascade",
     }),
 
+  // =========================
+  // Step 1 - Studio
+  // =========================
+
   logo: text("logo"),
+
+  studioName: text("studio_name").notNull(),
 
   ownerName: text("owner_name").notNull(),
 
@@ -167,26 +173,58 @@ export const organizationProfile = pgTable("organization_profile", {
 
   currency: text("currency").notNull(),
 
-  teamCount: text("team_count").notNull(),
+  // =========================
+  // Step 2 - Business
+  // =========================
 
-  averageBudget: text("average_budget").notNull(),
+  serviceCategories: text("service_categories")
+    .array()
+    .notNull()
+    .default([]),
+
+  teamSize: text("team_size"),
+
+  averageBudget: text("average_budget"),
+
+  // =========================
+  // Step 4 - Completion
+  // =========================
 
   onboardingCompletedAt: timestamp("onboarding_completed_at"),
 
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at")
+    .notNull()
+    .defaultNow(),
 
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at")
+    .notNull()
+    .$onUpdate(() => new Date())
+    .defaultNow(),
 });
 
 export const service = pgTable("service", {
   id: uuid("id").primaryKey().defaultRandom(),
+
   organizationId: text("organization_id")
     .notNull()
     .references(() => organization.id, {
       onDelete: "cascade",
     }),
+
   name: text("name").notNull(),
+
+  description: text("description"),
+
+  price: integer("price"),
+
+  currency: text("currency"),
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
+
+  updatedAt: timestamp("updated_at")
+    .notNull()
+    .$onUpdate(() => new Date())
+    .defaultNow(),
 });
 
 export const subscription = pgTable("subscription", {
@@ -235,6 +273,8 @@ export const formFields = pgTable("form_fields", {
     .references(() => forms.id, {
       onDelete: "cascade",
     }),
+
+    key: text("key").notNull(),
 
   type: text("type").notNull(),
 
