@@ -3,7 +3,11 @@ import { authClient } from "../../../lib/auth-client";
 export type MeResponse = {
   user: typeof authClient.$Infer.Session.user;
 
-  session: typeof authClient.$Infer.Session.session;
+  session: {
+    id: string;
+    expiresAt: string;
+    activeOrganizationId: string | null;
+  };
 
   organization: {
     id: string;
@@ -30,7 +34,23 @@ export type MeResponse = {
     status: string;
   } | null;
 
-  isOnboarded: boolean;
+  onboarding: {
+    completed: boolean;
+
+    studio: {
+      completed: boolean;
+    };
+
+    business: {
+      completed: boolean;
+    };
+
+    intakeForm: {
+      completed: boolean;
+    };
+
+    nextStep: "studio" | "business" | "intake-form" | "review" | "dashboard";
+  };
 
   requiresOrganizationSelection?: boolean;
 };
