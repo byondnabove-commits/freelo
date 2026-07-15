@@ -93,6 +93,7 @@ CREATE TABLE "clients" (
 CREATE TABLE "form_fields" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"form_id" uuid NOT NULL,
+	"key" text NOT NULL,
 	"type" text NOT NULL,
 	"label" text NOT NULL,
 	"placeholder" text,
@@ -177,12 +178,14 @@ CREATE TABLE "organization_profile" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"organization_id" text NOT NULL,
 	"logo" text,
+	"studio_name" text NOT NULL,
 	"owner_name" text NOT NULL,
 	"professional_email" text NOT NULL,
 	"timezone" text NOT NULL,
 	"currency" text NOT NULL,
-	"team_count" text NOT NULL,
-	"average_budget" text NOT NULL,
+	"service_categories" text[] DEFAULT '{}' NOT NULL,
+	"team_size" text,
+	"average_budget" text,
 	"onboarding_completed_at" timestamp,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
@@ -220,7 +223,11 @@ CREATE TABLE "service" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"organization_id" text NOT NULL,
 	"name" text NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL
+	"description" text,
+	"price" integer,
+	"currency" text,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "subscription" (

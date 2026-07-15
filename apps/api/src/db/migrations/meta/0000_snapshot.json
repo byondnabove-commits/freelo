@@ -1,5 +1,5 @@
 {
-  "id": "4925f2bd-66da-4481-a2a7-955360bb78bc",
+  "id": "70bffeb6-7c28-46bb-9798-6c4cef9afe12",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -788,6 +788,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "type": {
           "name": "type",
           "type": "text",
@@ -1369,6 +1375,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "studio_name": {
+          "name": "studio_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "owner_name": {
           "name": "owner_name",
           "type": "text",
@@ -1393,17 +1405,24 @@
           "primaryKey": false,
           "notNull": true
         },
-        "team_count": {
-          "name": "team_count",
+        "service_categories": {
+          "name": "service_categories",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "team_size": {
+          "name": "team_size",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "average_budget": {
           "name": "average_budget",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "onboarding_completed_at": {
           "name": "onboarding_completed_at",
@@ -1669,8 +1688,33 @@
           "primaryKey": false,
           "notNull": true
         },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "price": {
+          "name": "price",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
