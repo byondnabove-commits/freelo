@@ -2,11 +2,12 @@ import { useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import { authClient } from "@/lib/auth-client";
-import { onboardingSchema, STEP_FIELDS, type OnboardingData } from "./schema";
 import { api } from "@/lib/api";
 
-// Sub-step imports...
+import { onboardingSchema, STEP_FIELDS, type OnboardingData } from "./schema";
+
 import { StepOne } from "./step-one";
 import { StepTwo } from "./step-two";
 import { StepThree } from "./step-three";
@@ -16,16 +17,15 @@ import { SidebarStepper } from "./sidebar-stepper";
 export default function OnboardingWizard() {
   const [step, setStep] = useState(1);
 
-  // Fixes Error 2: Fully aligned 1:1 types between Zod and RHF
   const methods = useForm<OnboardingData>({
     resolver: zodResolver(onboardingSchema),
     mode: "onChange",
     defaultValues: {
       studioName: "",
       ownerName: "",
-      timezone: "Europe/Algiers", // Initial defaults assigned cleanly here
+      timezone: "Europe/Algiers",
       professionalEmail: "",
-      currency: "USD", // Initial defaults assigned cleanly here
+      currency: "USD",
       serviceCategories: [],
       teamSize: "solo",
       averageBudget: "1000_5000",
@@ -42,55 +42,103 @@ export default function OnboardingWizard() {
     },
   });
 
-  const { trigger, handleSubmit } = methods;
+  const { trigger } = methods;
 
   const queryClient = useQueryClient();
 
-  const { mutate: submitOnboarding, isPending } = useMutation({
-    mutationFn: async (data: OnboardingData) => {
-      const orgResult = await authClient.organization.create({
-        name: data.studioName,
-        slug: data.studioName.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-      });
-      if (orgResult.error) throw new Error(orgResult.error.message);
+  const { mutateAsync: createStudio, isPending: isCreatingStudio } =
+    useMutation({
+      mutationFn: async (data: OnboardingData) => {
+        //----------------------------------------
+        // Create organization
+        //----------------------------------------
 
-      const setActiveResult = await authClient.organization.setActive({
-        organizationId: orgResult.data.id,
-      });
-      const session = await authClient.getSession();
+        console.log("1. Creating organization");
 
-      console.log(session);
-      console.log(setActiveResult);
-      if (setActiveResult.error) throw new Error(setActiveResult.error.message);
+        const organization = await authClient.organization.create({
+          name: data.studioName,
+          slug: data.studioName.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        });
 
-      await api.post("/api/onboarding", {
-        ownerName: data.ownerName,
-        timezone: data.timezone,
-        professionalEmail: data.professionalEmail,
-        currency: data.currency,
-        logo: data.logo,
-        serviceCategories: data.serviceCategories,
-        teamSize: data.teamSize,
-        averageBudget: data.averageBudget,
-        intakeFields: data.intakeFields,
-      });
+        console.log("Organization response", organization);
 
-      return orgResult.data;
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["me"] });
-      setStep(4);
-    },
-  });
+        if (organization.error) {
+          throw new Error(organization.error.message);
+        }
+
+        console.log("2. Setting active organization");
+
+        //----------------------------------------
+        // Set active organization
+        //----------------------------------------
+
+        const active = await authClient.organization.setActive({
+          organizationId: organization.data.id,
+        });
+
+        console.log("Set active response", active);
+
+        if (active.error) {
+          throw new Error(active.error.message);
+        }
+
+        //----------------------------------------
+        // Save Step 1
+        //----------------------------------------
+
+        console.log("3. Calling studio endpoint");
+
+       const response =  await api.post("/api/onboarding/studio", {
+          logo: data.logo,
+          studioName: data.studioName,
+          ownerName: data.ownerName,
+          timezone: data.timezone,
+          professionalEmail: data.professionalEmail,
+          currency: data.currency,
+        });
+
+        console.log("Studio response", response.data);
+
+        return organization.data;
+      },
+
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({
+          queryKey: ["me"],
+        });
+
+        setStep(2);
+      },
+    });
 
   const handleNext = async () => {
-    const activeFields = STEP_FIELDS[step - 1];
-    // RHF trigger safely processes the array of FieldPaths
-    const isStepValid = await trigger(activeFields);
-    if (isStepValid) setStep((prev) => Math.min(prev + 1, 4));
+    const fields = STEP_FIELDS[step - 1];
+
+    const valid = await trigger(fields);
+
+    if (!valid) return;
+
+    switch (step) {
+      case 1:
+        await createStudio(methods.getValues());
+        return;
+
+      case 2:
+        setStep(3);
+        return;
+
+      case 3:
+        setStep(4);
+        return;
+
+      default:
+        return;
+    }
   };
 
-  const handleBack = () => setStep((prev) => Math.max(prev - 1, 1));
+  const handleBack = () => {
+    setStep((prev) => Math.max(prev - 1, 1));
+  };
 
   return (
     <FormProvider {...methods}>
@@ -130,27 +178,14 @@ export default function OnboardingWizard() {
                     </button>
                   )}
 
-                  {step < 3 ? (
-                    <button
-                      type="button"
-                      onClick={handleNext}
-                      className="bg-[#00B464] hover:bg-[#009E56] text-white font-medium px-6 py-2.5 rounded-lg text-sm transition-all shadow-sm"
-                    >
-                      Continue →
-                    </button>
-                  ) : (
-                    // Fixes Error 3: 'data' is now automatically and strictly inferred as OnboardingData
-                    <button
-                      type="button"
-                      onClick={handleSubmit((data) => submitOnboarding(data))}
-                      disabled={isPending}
-                      className="bg-[#00B464] hover:bg-[#009E56] disabled:bg-neutral-300 text-white font-medium px-6 py-2.5 rounded-lg text-sm transition-all shadow-sm"
-                    >
-                      {isPending
-                        ? "Setting up workspace..."
-                        : "Finish the setup 🚀"}
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    disabled={isCreatingStudio}
+                    className="bg-[#00B464] hover:bg-[#009E56] disabled:bg-neutral-300 text-white font-medium px-6 py-2.5 rounded-lg text-sm transition-all shadow-sm"
+                  >
+                    {isCreatingStudio ? "Saving..." : "Continue →"}
+                  </button>
                 </div>
               </div>
             )}

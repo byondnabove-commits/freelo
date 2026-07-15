@@ -12,7 +12,7 @@ import ForgotPassword from "@/features/auth/pages/ForgotPassword";
 import ResetPassword from "@/features/auth/pages/ResetPassword";
 
 // Tenant Onboarding Flow Wizard Module
-import OnboardingWizard from "@/features/auth/onboarding";
+import OnboardingWizard from "@/features/onboarding";
 
 // Core Panel Subview Feature Folders (Resolves directly to index.tsx entries)
 import DashboardOverview from "@/features/overview";
