@@ -22,13 +22,13 @@ export default function OnboardingWizard() {
     mode: "onChange",
     defaultValues: {
       studioName: "",
-      fullName: "",
+      ownerName: "",
       timezone: "Europe/Algiers", // Initial defaults assigned cleanly here
       professionalEmail: "",
       currency: "USD", // Initial defaults assigned cleanly here
-      services: [],
-      workStyle: "solo",
-      averageBudget: "1k-5k",
+      serviceCategories: [],
+      teamSize: "solo",
+      averageBudget: "1000_5000",
       intakeFields: {
         companyName: true,
         projectType: true,
@@ -64,13 +64,13 @@ export default function OnboardingWizard() {
       if (setActiveResult.error) throw new Error(setActiveResult.error.message);
 
       await api.post("/api/onboarding", {
-        fullName: data.fullName,
+        ownerName: data.ownerName,
         timezone: data.timezone,
         professionalEmail: data.professionalEmail,
         currency: data.currency,
-        logoUrl: data.logoUrl,
-        services: data.services,
-        workStyle: data.workStyle,
+        logo: data.logo,
+        serviceCategories: data.serviceCategories,
+        teamSize: data.teamSize,
         averageBudget: data.averageBudget,
         intakeFields: data.intakeFields,
       });

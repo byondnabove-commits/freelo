@@ -52,15 +52,15 @@ export function StepOne() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="fullName">Your name</Label>
+          <Label htmlFor="ownerName">Your name</Label>
           <Input
-            id="fullName"
+            id="ownerName"
             placeholder="Alex Mercer"
-            {...register("fullName")}
+            {...register("ownerName")}
           />
-          {errors.fullName && (
+          {errors.ownerName && (
             <p className="text-xs text-rose-500">
-              {errors.fullName.message as string}
+              {errors.ownerName.message as string}
             </p>
           )}
         </div>

@@ -1,19 +1,31 @@
 import { useFormContext } from "react-hook-form";
 import { cn } from "@/lib/utils";
 
-const SERVICES = ["Brand Identity", "Web Design", "Development", "UI/UX Design", "Motion & Video", "Photography", "Copywriting", "Social Media", "Other"];
+
+
+const SERVICES = [
+  { value: "brand_identity", label: "Brand Identity" },
+  { value: "web_design", label: "Web Design" },
+  { value: "development", label: "Development" },
+  { value: "ui_ux_design", label: "UI/UX Design" },
+  { value: "motion_video", label: "Motion & Video" },
+  { value: "photography", label: "Photography" },
+  { value: "copywriting", label: "Copywriting" },
+  { value: "social_media", label: "Social Media" },
+  { value: "other", label: "Other" }
+];
 
 export function StepTwo() {
   const { watch, setValue } = useFormContext();
-  const selectedServices: string[] = watch("services") || [];
-  const activeStyle = watch("workStyle");
+  const selectedServices: string[] = watch("serviceCategories") || [];
+  const activeStyle = watch("teamSize");
   const activeBudget = watch("averageBudget");
 
   const toggleService = (srv: string) => {
     if (selectedServices.includes(srv)) {
-      setValue("services", selectedServices.filter((s) => s !== srv), { shouldValidate: true });
+      setValue("serviceCategories", selectedServices.filter((s) => s !== srv), { shouldValidate: true });
     } else {
-      setValue("services", [...selectedServices, srv], { shouldValidate: true });
+      setValue("serviceCategories", [...selectedServices, srv], { shouldValidate: true });
     }
   };
 
@@ -30,12 +42,12 @@ export function StepTwo() {
         <label className="text-xs font-bold text-neutral-700 block">Your Services</label>
         <div className="flex flex-wrap gap-2">
           {SERVICES.map((srv) => {
-            const isSelected = selectedServices.includes(srv);
+            const isSelected = selectedServices.includes(srv.value);
             return (
               <button
                 type="button"
-                key={srv}
-                onClick={() => toggleService(srv)}
+                key={srv.value}
+                onClick={() => toggleService(srv.value)}
                 className={cn(
                   "px-3 py-1.5 text-xs font-medium rounded-full border transition-all",
                   isSelected 
@@ -43,7 +55,7 @@ export function StepTwo() {
                     : "bg-white border-neutral-200 text-neutral-600 hover:border-neutral-300"
                 )}
               >
-                {srv}
+                {srv.label}
               </button>
             );
           })}
@@ -56,12 +68,14 @@ export function StepTwo() {
         <div className="space-y-2">
           {[
             { id: "solo", title: "Solo - Just Me", desc: "I handle Everything Myself" },
-            { id: "team", title: "Small Team - 2 to 5 People", desc: "We collaborate on projects together" },
-            { id: "subcontract", title: "I subcontract Occasionally", desc: "I bring in specialists when needed" }
+            { id: "2_5", title: "Small Team - 2 to 5 People", desc: "We collaborate on projects together" },
+            { id: "6_15", title: "Medium Team - 6 to 15 People", desc: "We have a dedicated team for projects" },
+            { id: "16_plus", title: "Large Team - 16+ People", desc: "We have multiple teams and departments" }
+            
           ].map((opt) => (
             <div 
               key={opt.id}
-              onClick={() => setValue("workStyle", opt.id)}
+              onClick={() => setValue("teamSize", opt.id)}
               className={cn(
                 "flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition-all",
                 activeStyle === opt.id ? "border-[#00B464] bg-emerald-50/10" : "border-neutral-200 hover:bg-neutral-50/50"
@@ -84,10 +98,10 @@ export function StepTwo() {
         <label className="text-xs font-bold text-neutral-700 block">Average project budget</label>
         <div className="grid grid-cols-2 gap-2">
           {[
-            { id: "under-1k", label: "Under $1,000", desc: "Small projects & quick turnarounds" },
-            { id: "1k-5k", label: "$1,000 - $5,000", desc: "Mid-range projects" },
-            { id: "5k-15k", label: "$5,000 - $15,000", desc: "Premium studio work" },
-            { id: "15k-plus", label: "$15,000+", desc: "Enterprise & agency level" }
+            { id: "under_1000", label: "Under $1,000", desc: "Small projects & quick turnarounds" },
+            { id: "1000_5000", label: "$1,000 - $5,000", desc: "Mid-range projects" },
+            { id: "5000_15000", label: "$5,000 - $15,000", desc: "Premium studio work" },
+            { id: "15000_plus", label: "$15,000+", desc: "Enterprise & agency level" }
           ].map((bgt) => (
             <div 
               key={bgt.id}

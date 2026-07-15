@@ -6,8 +6,8 @@ export function StepFour() {
   const { watch } = useFormContext();
   const navigate = useNavigate();
   const studioName = watch("studioName") || "Your Studio";
-  const fullName = watch("fullName") || "Studio Owner";
-  const workStyle = watch("workStyle") === "solo" ? "Solo" : "Team";
+  const ownerName = watch("ownerName") || "Studio Owner";
+  const teamSize = watch("teamSize") === "solo" ? "Solo" : "Team";
 
   return (
     <div className="space-y-8 flex flex-col items-center text-center py-6 animate-in zoom-in-95 duration-500">
@@ -25,11 +25,11 @@ export function StepFour() {
       {/* User Dynamic Summary Badge Frame */}
       <div className="flex items-center gap-3 p-3 bg-neutral-50 border border-neutral-200/50 rounded-xl w-full max-w-sm text-left">
         <div className="w-10 h-10 bg-neutral-200 rounded-full flex items-center justify-center font-bold text-neutral-600 uppercase">
-          {fullName.charAt(0)}
+          {ownerName.charAt(0)}
         </div>
         <div>
-          <p className="text-xs font-bold text-neutral-800">{fullName}</p>
-          <p className="text-[10px] text-neutral-400">{studioName} · {workStyle}</p>
+          <p className="text-xs font-bold text-neutral-800">{ownerName}</p>
+          <p className="text-[10px] text-neutral-400">{studioName} · {teamSize}</p>
         </div>
       </div>
 
