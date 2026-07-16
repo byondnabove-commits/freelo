@@ -122,19 +122,19 @@ export default function OnboardingWizard() {
 
   const navigate = useNavigate();
 
- const handleFinish = async () => {
-  try {
-    await completeOnboarding();
+  const handleFinish = async () => {
+    try {
+      await completeOnboarding();
 
-    await queryClient.invalidateQueries({
-      queryKey: ["me"],
-    });
+      await queryClient.invalidateQueries({
+        queryKey: ["me"],
+      });
 
-    navigate("/dashboard");
-  } catch (error) {
-    console.error(error);
-  }
-};
+      navigate("/dashboard", { replace: true });
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   /*
   ==========================================================
@@ -143,43 +143,43 @@ export default function OnboardingWizard() {
   */
 
   const handleNext = async () => {
-  const fields = STEP_FIELDS[step - 1];
+    const fields = STEP_FIELDS[step - 1];
 
-  const valid = await trigger(fields);
+    const valid = await trigger(fields);
 
-  if (!valid) return;
+    if (!valid) return;
 
-  try {
-    switch (step) {
-      case 1:
-        await createStudio(getValues());
+    try {
+      switch (step) {
+        case 1:
+          await createStudio(getValues());
 
-        await queryClient.invalidateQueries({
-          queryKey: ["me"],
-        });
+          await queryClient.invalidateQueries({
+            queryKey: ["me"],
+          });
 
-        setStep(2);
-        return;
+          setStep(2);
+          return;
 
-      case 2:
-        await saveServices(getValues());
+        case 2:
+          await saveServices(getValues());
 
-        setStep(3);
-        return;
+          setStep(3);
+          return;
 
-      case 3:
-        await saveIntakeForm(getValues());
+        case 3:
+          await saveIntakeForm(getValues());
 
-        setStep(4);
-        return;
+          setStep(4);
+          return;
 
-      default:
-        return;
+        default:
+          return;
+      }
+    } catch (error) {
+      console.error(error);
     }
-  } catch (error) {
-    console.error(error);
-  }
-};
+  };
 
   const handleBack = () => {
     setStep((prev) => Math.max(prev - 1, 1));
@@ -201,44 +201,45 @@ export default function OnboardingWizard() {
               {step === 4 && <StepFour />}
             </div>
 
-            {step < 4 && (
-              <div className="flex items-center justify-between pt-8 border-t border-neutral-100 mt-12">
+            <div
+              className={`pt-8 border-t border-neutral-100 mt-12 flex ${
+                step < 4 ? "justify-between" : "justify-end"
+              }`}
+              >
+              {" "}
+              {step > 1 && step < 4 && (
                 <button
                   type="button"
                   onClick={handleBack}
-                  disabled={step === 1}
-                  className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-neutral-700 disabled:opacity-30 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-neutral-700 transition-colors"
                 >
                   ← Back
                 </button>
-
-                {step < 4 ? (
-                  <button
-                    type="button"
-                    onClick={handleNext}
-                    disabled={
-                      isCreatingStudio || isSavingServices || isSavingIntakeForm
-                    }
-                    className="bg-[#00B464] hover:bg-[#009E56] disabled:bg-neutral-300 text-white font-medium px-6 py-2.5 rounded-lg text-sm transition-all shadow-sm"
-                  >
-                    {isCreatingStudio || isSavingServices || isSavingIntakeForm
-                      ? "Saving..."
-                      : "Continue →"}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleFinish}
-                    disabled={isCompletingOnboarding}
-                    className="bg-[#00B464] hover:bg-[#009E56] disabled:bg-neutral-300 text-white font-medium px-6 py-2.5 rounded-lg text-sm transition-all shadow-sm"
-                  >
-                    {isCompletingOnboarding
-                      ? "Finishing..."
-                      : "Finish Setup 🚀"}
-                  </button>
-                )}
-              </div>
-            )}
+              )}
+              {step < 4 ? (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={
+                    isCreatingStudio || isSavingServices || isSavingIntakeForm
+                  }
+                  className="bg-[#00B464] hover:bg-[#009E56] disabled:bg-neutral-300 text-white font-medium px-6 py-2.5 rounded-lg text-sm transition-all shadow-sm"
+                >
+                  {isCreatingStudio || isSavingServices || isSavingIntakeForm
+                    ? "Saving..."
+                    : "Continue →"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleFinish}
+                  disabled={isCompletingOnboarding}
+                  className="bg-[#00B464] hover:bg-[#009E56] disabled:bg-neutral-300 text-white font-medium px-6 py-2.5 rounded-lg text-sm transition-all shadow-sm"
+                >
+                  {isCompletingOnboarding ? "Finishing..." : "Finish Setup 🚀"}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
