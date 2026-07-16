@@ -1,21 +1,25 @@
 import { useState } from "react";
-import { useForm, FormProvider } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { authClient } from "@/lib/auth-client";
 import { api } from "@/lib/api";
 
+import { useNavigate } from "react-router-dom";
+
 import { onboardingSchema, STEP_FIELDS, type OnboardingData } from "./schema";
 
-import { StepOne } from "./step-one";
-import { StepTwo } from "./step-two";
-import { StepThree } from "./step-three";
-import { StepFour } from "./step-four";
 import { SidebarStepper } from "./sidebar-stepper";
+import { StepFour } from "./step-four";
+import { StepOne } from "./step-one";
+import { StepThree } from "./step-three";
+import { StepTwo } from "./step-two";
 
 export default function OnboardingWizard() {
   const [step, setStep] = useState(1);
+
+  const queryClient = useQueryClient();
 
   const methods = useForm<OnboardingData>({
     resolver: zodResolver(onboardingSchema),
@@ -26,9 +30,11 @@ export default function OnboardingWizard() {
       timezone: "Europe/Algiers",
       professionalEmail: "",
       currency: "USD",
+
       serviceCategories: [],
       teamSize: "solo",
       averageBudget: "1000_5000",
+
       intakeFields: {
         companyName: true,
         projectType: true,
@@ -42,53 +48,35 @@ export default function OnboardingWizard() {
     },
   });
 
-  const { trigger } = methods;
+  const { trigger, getValues } = methods;
 
-  const queryClient = useQueryClient();
+  /*
+  ==========================================================
+  STEP 1
+  ==========================================================
+  */
 
   const { mutateAsync: createStudio, isPending: isCreatingStudio } =
     useMutation({
       mutationFn: async (data: OnboardingData) => {
-        //----------------------------------------
-        // Create organization
-        //----------------------------------------
-
-        console.log("1. Creating organization");
-
         const organization = await authClient.organization.create({
           name: data.studioName,
           slug: data.studioName.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
         });
 
-        console.log("Organization response", organization);
-
         if (organization.error) {
           throw new Error(organization.error.message);
         }
-
-        console.log("2. Setting active organization");
-
-        //----------------------------------------
-        // Set active organization
-        //----------------------------------------
 
         const active = await authClient.organization.setActive({
           organizationId: organization.data.id,
         });
 
-        console.log("Set active response", active);
-
         if (active.error) {
           throw new Error(active.error.message);
         }
 
-        //----------------------------------------
-        // Save Step 1
-        //----------------------------------------
-
-        console.log("3. Calling studio endpoint");
-
-       const response =  await api.post("/api/onboarding/studio", {
+        await api.post("/api/onboarding/studio", {
           logo: data.logo,
           studioName: data.studioName,
           ownerName: data.ownerName,
@@ -96,45 +84,102 @@ export default function OnboardingWizard() {
           professionalEmail: data.professionalEmail,
           currency: data.currency,
         });
-
-        console.log("Studio response", response.data);
-
-        return organization.data;
       },
+    });
 
-      onSuccess: async () => {
+  /*
+  ==========================================================
+  STEP 2
+  ==========================================================
+  */
+
+  const { mutateAsync: saveServices, isPending: isSavingServices } =
+    useMutation({
+      mutationFn: async (data: OnboardingData) => {
+        await api.put("/api/onboarding/services", {
+          serviceCategories: data.serviceCategories,
+          teamSize: data.teamSize,
+          averageBudget: data.averageBudget,
+        });
+      },
+    });
+
+  const { mutateAsync: saveIntakeForm, isPending: isSavingIntakeForm } =
+    useMutation({
+      mutationFn: async (data: OnboardingData) => {
+        await api.put("/api/onboarding/intake-form", {
+          intakeFields: data.intakeFields,
+        });
+      },
+    });
+
+  const { mutateAsync: completeOnboarding, isPending: isCompletingOnboarding } =
+    useMutation({
+      mutationFn: async () => {
+        await api.post("/api/onboarding/complete");
+      },
+    });
+
+  const navigate = useNavigate();
+
+ const handleFinish = async () => {
+  try {
+    await completeOnboarding();
+
+    await queryClient.invalidateQueries({
+      queryKey: ["me"],
+    });
+
+    navigate("/dashboard");
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+  /*
+  ==========================================================
+  NEXT
+  ==========================================================
+  */
+
+  const handleNext = async () => {
+  const fields = STEP_FIELDS[step - 1];
+
+  const valid = await trigger(fields);
+
+  if (!valid) return;
+
+  try {
+    switch (step) {
+      case 1:
+        await createStudio(getValues());
+
         await queryClient.invalidateQueries({
           queryKey: ["me"],
         });
 
         setStep(2);
-      },
-    });
-
-  const handleNext = async () => {
-    const fields = STEP_FIELDS[step - 1];
-
-    const valid = await trigger(fields);
-
-    if (!valid) return;
-
-    switch (step) {
-      case 1:
-        await createStudio(methods.getValues());
         return;
 
       case 2:
+        await saveServices(getValues());
+
         setStep(3);
         return;
 
       case 3:
+        await saveIntakeForm(getValues());
+
         setStep(4);
         return;
 
       default:
         return;
     }
-  };
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   const handleBack = () => {
     setStep((prev) => Math.max(prev - 1, 1));
@@ -167,26 +212,31 @@ export default function OnboardingWizard() {
                   ← Back
                 </button>
 
-                <div className="flex items-center gap-6">
-                  {step > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => setStep((p) => p + 1)}
-                      className="text-xs text-neutral-400 hover:text-neutral-600 font-medium underline underline-offset-4"
-                    >
-                      Skip for now
-                    </button>
-                  )}
-
+                {step < 4 ? (
                   <button
                     type="button"
                     onClick={handleNext}
-                    disabled={isCreatingStudio}
+                    disabled={
+                      isCreatingStudio || isSavingServices || isSavingIntakeForm
+                    }
                     className="bg-[#00B464] hover:bg-[#009E56] disabled:bg-neutral-300 text-white font-medium px-6 py-2.5 rounded-lg text-sm transition-all shadow-sm"
                   >
-                    {isCreatingStudio ? "Saving..." : "Continue →"}
+                    {isCreatingStudio || isSavingServices || isSavingIntakeForm
+                      ? "Saving..."
+                      : "Continue →"}
                   </button>
-                </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleFinish}
+                    disabled={isCompletingOnboarding}
+                    className="bg-[#00B464] hover:bg-[#009E56] disabled:bg-neutral-300 text-white font-medium px-6 py-2.5 rounded-lg text-sm transition-all shadow-sm"
+                  >
+                    {isCompletingOnboarding
+                      ? "Finishing..."
+                      : "Finish Setup 🚀"}
+                  </button>
+                )}
               </div>
             )}
           </div>
