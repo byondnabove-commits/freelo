@@ -37,17 +37,22 @@ async function request<T>(
   path: string,
   init: RequestInit = {},
 ): Promise<ApiResponse<T>> {
+  const isFormData = init.body instanceof FormData;
+
   const response = await fetch(buildUrl(path), {
     credentials: "include",
     ...init,
     headers: {
       Accept: "application/json",
-      ...(init.body ? { "Content-Type": "application/json" } : {}),
+      ...(isFormData
+        ? {}
+        : init.body
+          ? { "Content-Type": "application/json" }
+          : {}),
       ...(init.headers ?? {}),
     },
   });
 
-  // Handle 204 No Content
   if (response.status === 204) {
     return { data: undefined as T };
   }
@@ -67,6 +72,16 @@ async function request<T>(
   return body as ApiResponse<T>;
 }
 
+function prepareBody(body: unknown): BodyInit | undefined {
+  if (body === undefined) return undefined;
+
+  if (body instanceof FormData) {
+    return body;
+  }
+
+  return JSON.stringify(body);
+}
+
 export const api = {
   get<T>(path: string, init?: Omit<RequestInit, "method" | "body">) {
     return request<T>(path, {
@@ -82,7 +97,7 @@ export const api = {
   ) {
     return request<T>(path, {
       method: "POST",
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: prepareBody(body),
       ...init,
     });
   },
@@ -94,7 +109,7 @@ export const api = {
   ) {
     return request<T>(path, {
       method: "PUT",
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: prepareBody(body),
       ...init,
     });
   },
@@ -106,7 +121,7 @@ export const api = {
   ) {
     return request<T>(path, {
       method: "PATCH",
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: prepareBody(body),
       ...init,
     });
   },

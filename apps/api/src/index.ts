@@ -6,12 +6,14 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { secureHeaders } from "hono/secure-headers";
 import type { AppEnv } from "@/types/hono";
+import { serveStatic } from "@hono/node-server/serve-static";
 
 import { auth } from "./auth";
 
 import leadsRoutes from "./routes/leads";
 import meRoutes from "./routes/me";
 import onboardingRoutes from "./routes/onboarding";
+import upload from "./routes/upload";
 // -----------------------------------------------------------------------------
 // Types
 // -----------------------------------------------------------------------------
@@ -33,6 +35,13 @@ app.use(
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 
     allowHeaders: ["Content-Type", "Authorization"],
+  }),
+);
+
+app.use(
+  "/uploads/*",
+  serveStatic({
+    root: "./",
   }),
 );
 
@@ -74,7 +83,6 @@ app.use("/api/leads/*", secureHeaders());
 app.use("/health", secureHeaders());
 app.use("/api/onboarding", secureHeaders());
 
-
 // -----------------------------------------------------------------------------
 // Feature Routes
 // -----------------------------------------------------------------------------
@@ -82,6 +90,7 @@ app.use("/api/onboarding", secureHeaders());
 app.route("/api/leads", leadsRoutes);
 app.route("/api/me", meRoutes);
 app.route("/api/onboarding", onboardingRoutes);
+app.route("/api/upload", upload);
 
 // -----------------------------------------------------------------------------
 // Server
@@ -101,7 +110,6 @@ app.get("/health", (c) =>
     time: new Date().toISOString(),
   }),
 );
-
 
 const PORT = Number(process.env.PORT) || 3001;
 

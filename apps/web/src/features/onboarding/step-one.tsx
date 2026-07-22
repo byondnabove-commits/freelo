@@ -2,12 +2,51 @@ import { useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UploadCloud } from "lucide-react";
+import { uploadLogo } from "@/lib/upload-logo";
+import { ApiError } from "@/lib/api";
 
 export function StepOne() {
   const {
     register,
+    watch,
+    setValue,
+    setError,
+    clearErrors,
     formState: { errors },
   } = useFormContext();
+
+  const logo = watch("logo");
+
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    clearErrors("logo");
+
+    try {
+      const url = await uploadLogo(file);
+
+      setValue("logo", url, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setError("logo", {
+          type: "server",
+          message: error.message,
+        });
+      } else {
+        setError("logo", {
+          type: "server",
+          message: "Failed to upload logo.",
+        });
+      }
+
+      e.target.value = "";
+    }
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -22,19 +61,50 @@ export function StepOne() {
       </div>
 
       {/* Dynamic Drag Drop Input Zone Placeholder Frame */}
-      <div className="flex items-center gap-4 p-4 border border-dashed border-neutral-200 bg-neutral-50/50 rounded-xl cursor-pointer hover:bg-neutral-50 transition-all">
-        <div className="w-12 h-12 rounded-lg bg-emerald-50 flex items-center justify-center text-[#00B464]">
-          <UploadCloud className="w-5 h-5" />
-        </div>
-        <div>
-          <p className="text-xs font-semibold text-neutral-700">
-            Upload your logo
+      <>
+        <input
+          id="logo"
+          hidden
+          type="file"
+          accept=".png,.jpg,.jpeg,.webp,.svg"
+          {...register("logo")}
+          onChange={handleLogoChange}
+        />
+
+        <label
+          htmlFor="logo"
+          className="flex items-center gap-4 p-4 border border-dashed border-neutral-200 bg-neutral-50/50 rounded-xl cursor-pointer hover:bg-neutral-50 transition-all"
+        >
+          <div className="w-12 h-12 rounded-lg overflow-hidden bg-emerald-50 flex items-center justify-center shrink-0">
+            {logo ? (
+              <img
+                src={logo}
+                alt="Studio logo"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <UploadCloud className="w-5 h-5 text-[#00B464]" />
+            )}
+          </div>
+
+          <div className="flex-1">
+            <p className="text-xs font-semibold text-neutral-700">
+              {logo ? "Logo uploaded" : "Upload your logo"}
+            </p>
+
+            <p className="text-[10px] text-neutral-400">
+              {logo
+                ? "Click to replace your logo"
+                : "PNG, JPG, WEBP or SVG · Max 2MB · Optional"}
+            </p>
+          </div>
+        </label>
+        {errors.logo && (
+          <p className=" text-xs text-rose-500">
+            {errors.logo.message as string}
           </p>
-          <p className="text-[10px] text-neutral-400">
-            PNG or SVG · Max 2MB · Optional
-          </p>
-        </div>
-      </div>
+        )}
+      </>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">

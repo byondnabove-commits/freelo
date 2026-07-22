@@ -23,7 +23,7 @@ export function SidebarStepper({ currentStep }: { currentStep: number }) {
       {/* Line Node List Stepper Node Track */}
       <div className="relative flex flex-col gap-10 pl-2">
         {/* Vertical Rule Connection Connector Axis line background */}
-        <div className="absolute top-2 left-3.75 bottom-2 w-0.5 bg-neutral-200" />
+        <div className="absolute top-2 left-5.5 bottom-2 w-0.5 bg-neutral-200" />
 
         {/* Dynamic Progress Indicator Mask Line overlay */}
         <div
