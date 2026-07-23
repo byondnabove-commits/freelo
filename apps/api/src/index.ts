@@ -50,6 +50,16 @@ app.use(
 // -----------------------------------------------------------------------------
 
 app.use("*", async (c, next) => {
+  // Better Auth handles sessions internally on its own routes (sign-in,
+  // callback, sign-out, get-session, etc). Running a full getSession() here
+  // too just adds a redundant DB round-trip in front of every auth request
+  // (sign-in/social, callback, ...), which is what was causing the multi-second
+  // delay before the Google redirect actually fired.
+  if (c.req.path.startsWith("/api/auth")) {
+    await next();
+    return;
+  }
+
   const result = await auth.api.getSession({
     headers: c.req.raw.headers,
   });

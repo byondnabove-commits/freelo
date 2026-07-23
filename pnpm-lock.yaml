@@ -17,6 +17,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@freelo/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@hono/node-server':
         specifier: ^2.0.4
         version: 2.0.4(hono@4.12.25)
@@ -50,6 +53,9 @@ importers:
       resend:
         specifier: ^6.12.4
         version: 6.12.4
+      uuid:
+        specifier: ^14.0.1
+        version: 14.0.1
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -93,6 +99,9 @@ importers:
       '@fontsource-variable/inter':
         specifier: ^5.2.8
         version: 5.2.8
+      '@freelo/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@hookform/resolvers':
         specifier: ^5.4.0
         version: 5.4.0(react-hook-form@7.79.0(react@19.2.7))
@@ -263,30 +272,7 @@ importers:
         specifier: ^8.0.12
         version: 8.0.16(@types/node@24.13.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)
 
-  packages/auth:
-    dependencies:
-      better-auth:
-        specifier: ^1.6.18
-        version: 1.6.18(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(kysely@0.29.2)(postgres@3.4.9))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      drizzle-orm:
-        specifier: ^0.45.2
-        version: 0.45.2(kysely@0.29.2)(postgres@3.4.9)
-      postgres:
-        specifier: ^3.4.9
-        version: 3.4.9
-    devDependencies:
-      '@types/node':
-        specifier: ^25.9.3
-        version: 25.9.3
-      drizzle-kit:
-        specifier: ^0.31.10
-        version: 0.31.10
-      tsx:
-        specifier: ^4.22.4
-        version: 4.22.4
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
+  packages/shared: {}
 
 packages:
 
@@ -4453,6 +4439,10 @@ packages:
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
 
+  uuid@14.0.1:
+    resolution: {integrity: sha512-6ZxzVpzDXDa3bJWaHilVayA+BH/1zmxCJoVgvmqJnid/gPoKHxUrS/aC/T6LGQtNHT+XHG9fXPJB4d+IrU30Ew==}
+    hasBin: true
+
   validate-npm-package-name@7.0.2:
     resolution: {integrity: sha512-hVDIBwsRruT73PbK7uP5ebUt+ezEtCmzZz3F59BSr2F6OVFnJ/6h8liuvdLrQ88Xmnk6/+xGGuq+pG9WwTuy3A==}
     engines: {node: ^20.17.0 || >=22.9.0}
@@ -8527,6 +8517,8 @@ snapshots:
       react: 19.2.7
 
   util-deprecate@1.0.2: {}
+
+  uuid@14.0.1: {}
 
   validate-npm-package-name@7.0.2: {}
 

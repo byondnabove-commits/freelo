@@ -8,6 +8,13 @@
       "when": 1784134341767,
       "tag": "0000_normal_human_cannonball",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1784814327465,
+      "tag": "0001_eminent_warpath",
+      "breakpoints": true
     }
   ]
 }

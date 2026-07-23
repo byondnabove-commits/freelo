@@ -66,11 +66,23 @@ export default function Login() {
     },
   });
 
+  const [googleLoading, setGoogleLoading] = useState(false);
+
   const handleGoogleLogin = async () => {
-    await signIn.social({
-      provider: "google",
-      callbackURL: `${window.location.origin}/`,
-    });
+    if (googleLoading) return; // guard against a second click while the first request is in flight
+    setGoogleLoading(true);
+    try {
+      await signIn.social({
+        provider: "google",
+        callbackURL: `${window.location.origin}/`,
+      });
+      // NOTE: on success this triggers a full page redirect to Google, so we
+      // deliberately don't reset googleLoading here — the component unmounts.
+    } catch (error) {
+      setGoogleLoading(false);
+      console.log(error)
+      toast.error("Couldn't start Google sign-in. Please try again.");
+    }
   };
 
   return (
@@ -151,7 +163,7 @@ export default function Login() {
               </div>
 
               {/* Submit */}
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full" disabled={loading || googleLoading}>
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -167,8 +179,16 @@ export default function Login() {
                 variant="outline"
                 className="w-full"
                 onClick={handleGoogleLogin}
+                disabled={loading || googleLoading}
               >
-                Continue with Google
+                {googleLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Redirecting...
+                  </>
+                ) : (
+                  "Continue with Google"
+                )}
               </Button>
 
               <p className="text-center text-sm text-muted-foreground">

@@ -8,10 +8,10 @@ import {
   jsonb,
   numeric,
   uuid,
+  unique
 } from "drizzle-orm/pg-core";
 
 import { organization } from "./auth";
-import { textDecoder } from "drizzle-orm";
 
 // We reference organization from better-auth tables
 // better-auth cli will generate those — we just reference by string here
@@ -177,10 +177,7 @@ export const organizationProfile = pgTable("organization_profile", {
   // Step 2 - Business
   // =========================
 
-  serviceCategories: text("service_categories")
-    .array()
-    .notNull()
-    .default([]),
+  serviceCategories: text("service_categories").array().notNull().default([]),
 
   teamSize: text("team_size"),
 
@@ -192,9 +189,7 @@ export const organizationProfile = pgTable("organization_profile", {
 
   onboardingCompletedAt: timestamp("onboarding_completed_at"),
 
-  createdAt: timestamp("created_at")
-    .notNull()
-    .defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 
   updatedAt: timestamp("updated_at")
     .notNull()
@@ -243,27 +238,39 @@ export const subscription = pgTable("subscription", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const forms = pgTable("forms", {
-  id: uuid("id").primaryKey().defaultRandom(),
+export const forms = pgTable(
+  "forms",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
 
-  organizationId: text("organization_id")
-    .notNull()
-    .references(() => organization.id, {
-      onDelete: "cascade",
-    }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, {
+        onDelete: "cascade",
+      }),
 
-  name: text("name").notNull(),
+    name: text("name").notNull(),
 
-  description: text("description"),
+    description: text("description"),
 
-  slug: text("slug").notNull().unique(),
+    slug: text("slug").notNull(),
 
-  isActive: boolean("is_active").notNull().default(true),
+    isActive: boolean("is_active").notNull().default(true),
 
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
 
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .$onUpdate(() => new Date())
+      .defaultNow(),
+  },
+  (table) => ({
+    organizationSlugUnique: unique("forms_organization_slug_unique").on(
+      table.organizationId,
+      table.slug,
+    ),
+  }),
+);
 
 export const formFields = pgTable("form_fields", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -274,7 +281,7 @@ export const formFields = pgTable("form_fields", {
       onDelete: "cascade",
     }),
 
-    key: text("key").notNull(),
+  key: text("key").notNull(),
 
   type: text("type").notNull(),
 

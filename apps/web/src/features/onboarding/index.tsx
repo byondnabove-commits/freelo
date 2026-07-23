@@ -25,6 +25,7 @@ export default function OnboardingWizard() {
     resolver: zodResolver(onboardingSchema),
     mode: "onChange",
     defaultValues: {
+      logo: "",
       studioName: "",
       ownerName: "",
       timezone: "Europe/Algiers",

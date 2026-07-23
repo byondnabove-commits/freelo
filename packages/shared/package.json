@@ -1,0 +1,16 @@
+{
+  "name": "@freelo/shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./data/currencies": {
+      "types": "./data/currencies.ts",
+      "default": "./data/currencies.ts"
+    },
+    "./data/timezones": {
+      "types": "./data/timezones.ts",
+      "default": "./data/timezones.ts"
+    }
+  }
+}
