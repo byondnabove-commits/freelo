@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./db/*": "./db/*",
     "./data/currencies": {
       "types": "./data/currencies.ts",
       "default": "./data/currencies.ts"
@@ -12,5 +13,8 @@
       "types": "./data/timezones.ts",
       "default": "./data/timezones.ts"
     }
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.2"
   }
 }

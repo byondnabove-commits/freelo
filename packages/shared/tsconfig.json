@@ -8,5 +8,5 @@
     "declaration": true,
     "skipLibCheck": true
   },
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "../../apps/api/src/db/index.ts"]
 }
