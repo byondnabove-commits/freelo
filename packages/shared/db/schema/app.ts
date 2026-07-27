@@ -192,9 +192,9 @@ export const invoices = pgTable(
     }),
     number: text("number").notNull(),
     status: invoiceStatusEnum("status").notNull().default("draft"),
-    items: jsonb("items").notNull().default([]),
     // Stored in cents (integer) to match `service.price` and avoid a
     // float/decimal unit mismatch if a service price feeds an invoice total.
+    // Line items live in `invoiceLineItems` — see below.
     subtotal: integer("subtotal").notNull().default(0),
     total: integer("total").notNull().default(0),
     dueDate: date("due_date"),
@@ -209,6 +209,42 @@ export const invoices = pgTable(
       table.organizationId,
       table.number,
     ),
+  ],
+);
+
+// `invoices.items` used to be a jsonb array — that's a repeating group
+// (1NF violation) hiding inside a single column. Pulling it into its own
+// table lets each line item have real types, be queried/reported on
+// individually, and be FK'd to the invoice instead of trusted blindly.
+export const invoiceLineItems = pgTable(
+  "invoice_line_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, {
+        onDelete: "cascade",
+      }),
+    invoiceId: uuid("invoice_id")
+      .notNull()
+      .references(() => invoices.id, {
+        onDelete: "cascade",
+      }),
+    description: text("description").notNull(),
+    quantity: numeric("quantity", { precision: 10, scale: 2 })
+      .notNull()
+      .default("1"),
+    // Cents, matching invoices.subtotal/total.
+    unitPrice: integer("unit_price").notNull(),
+    // quantity * unitPrice, stored (not just computed) so historical
+    // invoices don't change if unitPrice conventions shift later.
+    amount: integer("amount").notNull(),
+    position: integer("position").notNull().default(0),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("invoice_line_items_organization_id_idx").on(table.organizationId),
+    index("invoice_line_items_invoice_id_idx").on(table.invoiceId),
   ],
 );
 
