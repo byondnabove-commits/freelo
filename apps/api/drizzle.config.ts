@@ -1,14 +1,14 @@
-import { defineConfig } from 'drizzle-kit'
-import 'dotenv/config'
+import { defineConfig } from "drizzle-kit";
+import "dotenv/config";
 
 // Provide a lightweight local declaration for `process` to avoid needing @types/node in this repo.
-declare const process: { env: { DATABASE_URL?: string } }
+declare const process: { env: { DATABASE_URL?: string } };
 
 export default defineConfig({
-  schema:  './src/db/schema/index.ts',
-  out:     './src/db/migrations',
-  dialect: 'postgresql',
+  schema: "../../packages/shared/db/schema/index.ts",
+  out: "../../packages/shared/db/migrations",
+  dialect: "postgresql",
   dbCredentials: {
     url: process.env.DATABASE_URL!,
   },
-})
+});
