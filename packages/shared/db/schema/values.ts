@@ -124,3 +124,29 @@ export const ANNOTATION_STATUSES = [
 ] as const;
 
 export type AnnotationStatus = (typeof ANNOTATION_STATUSES)[number];
+
+// ================================
+// Forms
+// ================================
+
+export const FORM_STATES = [
+  "draft",
+  "published",
+] as const;
+
+export type FormState = (typeof FORM_STATES)[number];
+
+export const FIELD_TYPES = [
+  "text",
+  "textarea",
+  "email",
+  "phone",
+  "url",
+  "number",
+  "date",
+  "select",
+  "radio",
+  "checkbox",
+] as const;
+
+export type FieldType = (typeof FIELD_TYPES)[number];

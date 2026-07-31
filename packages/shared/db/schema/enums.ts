@@ -11,6 +11,8 @@ import {
   SUBSCRIPTION_STATUSES,
   CONTRACT_STATUSES,
   ANNOTATION_STATUSES,
+  FORM_STATES,
+  FIELD_TYPES,
 } from "./values";
 
 export const leadStatusEnum = pgEnum("lead_status", LEAD_STATUSES);
@@ -44,3 +46,7 @@ export const annotationStatusEnum = pgEnum(
   "annotation_status",
   ANNOTATION_STATUSES,
 );
+
+export const formStateEnum = pgEnum("form_state", FORM_STATES);
+
+export const fieldTypeEnum = pgEnum("field_type", FIELD_TYPES);

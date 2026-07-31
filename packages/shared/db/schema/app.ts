@@ -23,6 +23,8 @@ import {
   subscriptionStatusEnum,
   contractStatusEnum,
   annotationStatusEnum,
+  formStateEnum,
+  fieldTypeEnum,
 } from "./enums";
 
 import { organization, user } from "./auth";
@@ -416,15 +418,24 @@ export const forms = pgTable(
         onDelete: "cascade",
       }),
 
-    name: text("name").notNull(),
+    title: text("title").notNull(),
 
     description: text("description"),
 
-    // Globally unique (not per-org): the public route is /f/[slug] with no
-    // org identifier in the path, so two orgs can't share a slug.
+    // Public URL: /f/:slug
     slug: text("slug").notNull().unique(),
 
-    isActive: boolean("is_active").notNull().default(true),
+    state: formStateEnum("state").notNull().default("draft"),
+
+    successMessage: text("success_message")
+      .notNull()
+      .default("Thank you! Your submission has been received."),
+
+    allowMultipleSubmissions: boolean("allow_multiple_submissions")
+      .notNull()
+      .default(true),
+
+    publishedAt: timestamp("published_at"),
 
     createdAt: timestamp("created_at").notNull().defaultNow(),
 
@@ -436,51 +447,72 @@ export const forms = pgTable(
   (table) => [index("forms_organization_id_idx").on(table.organizationId)],
 );
 
-export const formFields = pgTable("form_fields", {
-  id: uuid("id").primaryKey().defaultRandom(),
+export const formFields = pgTable(
+  "form_fields",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
 
-  formId: uuid("form_id")
-    .notNull()
-    .references(() => forms.id, {
-      onDelete: "cascade",
-    }),
+    formId: uuid("form_id")
+      .notNull()
+      .references(() => forms.id, {
+        onDelete: "cascade",
+      }),
 
-  key: text("key").notNull(),
+    name: text("name").notNull(),
 
-  type: text("type").notNull(),
+    type: fieldTypeEnum("type").notNull(),
 
-  label: text("label").notNull(),
+    label: text("label").notNull(),
 
-  placeholder: text("placeholder"),
+    placeholder: text("placeholder"),
 
-  required: boolean("required").notNull().default(false),
+    helpText: text("help_text"),
 
-  options: jsonb("options"),
+    required: boolean("required").notNull().default(false),
 
-  position: integer("position").notNull(),
+    validation: jsonb("validation"),
 
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+    fieldOptions: jsonb("field_options"),
 
-export const formSubmissions = pgTable("form_submissions", {
-  id: uuid("id").primaryKey().defaultRandom(),
+    position: integer("position").notNull(),
 
-  formId: uuid("form_id")
-    .notNull()
-    .references(() => forms.id, {
-      onDelete: "cascade",
-    }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [index("form_fields_form_id_idx").on(table.formId)],
+);
 
-  submittedAt: timestamp("submitted_at").notNull().defaultNow(),
+export const formSubmissions = pgTable(
+  "form_submissions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
 
-  answers: jsonb("answers").notNull().default({}),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, {
+        onDelete: "cascade",
+      }),
 
-  ipAddress: text("ip_address"),
+    formId: uuid("form_id")
+      .notNull()
+      .references(() => forms.id, {
+        onDelete: "cascade",
+      }),
 
-  userAgent: text("user_agent"),
+    answers: jsonb("answers").notNull().default({}),
 
-  referrer: text("referrer"),
-});
+    submittedAt: timestamp("submitted_at").notNull().defaultNow(),
+
+    ipAddress: text("ip_address"),
+
+    userAgent: text("user_agent"),
+
+    referrer: text("referrer"),
+  },
+  (table) => [
+    index("form_submissions_form_id_idx").on(table.formId),
+    index("form_submissions_organization_id_idx").on(table.organizationId),
+  ],
+);
 
 // =========================
 // Contracts (Phase 5, W13)
