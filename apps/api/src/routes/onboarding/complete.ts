@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { organizationProfile } from "@/db/schema";
+import { organizationProfile } from "@freelo/shared/db/schema/app.js";
 import { requireOrg } from "@/middleware/require-org";
 
 const complete = new Hono();

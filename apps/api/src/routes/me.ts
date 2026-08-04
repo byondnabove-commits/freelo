@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { organizationProfile, subscription } from "@/db/schema";
+import { organizationProfile, subscription } from "@freelo/shared/db/schema/app.js";
 import { requireAuth } from "@/middleware/require-auth";
 import { getOrganizationContext } from "@/lib/auth/organization-context";
 import type { AppEnv } from "@/types/hono";

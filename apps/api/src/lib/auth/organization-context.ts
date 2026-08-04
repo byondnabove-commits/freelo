@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { member, organization } from "@/db/schema/auth";
+import { member, organization } from "@freelo/shared/db/schema/auth.js";
 import type { AppVariables, Member, Organization } from "@/types/hono";
 
 type User = NonNullable<AppVariables["user"]>;

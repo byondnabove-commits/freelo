@@ -1,6 +1,6 @@
 // types/hono.ts
 import { auth } from "@/auth";
-import type { organization, member } from "@/db/schema/auth";
+import type { organization, member } from "@freelo/shared/db/schema/auth.js";
 
 export type AppVariables = {
   user: typeof auth.$Infer.Session.user | null;

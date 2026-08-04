@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 
 import { db } from "@/db";
-import { organizationProfile } from "@/db/schema";
+import { organizationProfile } from "@freelo/shared/db/schema/app.js";
 import { requireOrg } from "@/middleware/require-org";
 
 import { studioSchema } from "./schema";

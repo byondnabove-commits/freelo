@@ -3,18 +3,42 @@ import { zValidator } from "@hono/zod-validator";
 import { and, eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { forms, formFields } from "@/db/schema";
+import { forms, formFields } from "@freelo/shared/db/schema/app.js";
 import { requireOrg } from "@/middleware/require-org";
 
 import { intakeFormSchema } from "./intake-form.schema";
 
+import type { FieldType } from "@freelo/shared/db/schema/values.js";
+
 const intakeForm = new Hono();
 
-const OPTIONAL_FIELDS = [
+type OnboardingField = {
+  key: string;
+  type: FieldType;
+  label: string;
+  placeholder: string | null;
+};
+
+const REQUIRED_FIELDS: OnboardingField[] = [
+  {
+    key: "fullName",
+    type: "text",
+    label: "Full name",
+    placeholder: "John Doe",
+  },
+  {
+    key: "email",
+    type: "email",
+    label: "Email address",
+    placeholder: "john@example.com",
+  },
+];
+
+const OPTIONAL_FIELDS: OnboardingField[] = [
   {
     key: "companyName",
     type: "text",
-    label: "Company/Brand name",
+    label: "Company / Brand name",
     placeholder: "Your company or brand",
   },
   {
@@ -47,32 +71,20 @@ const OPTIONAL_FIELDS = [
     label: "Website URL",
     placeholder: "https://",
   },
+
+  // Change back to "file" once FIELD_TYPES supports it
   {
     key: "attachments",
-    type: "file",
+    type: "text",
     label: "Attach a brief or inspiration",
-    placeholder: null,
+    placeholder: "Attachment link",
   },
+
   {
     key: "referralSource",
     type: "text",
     label: "How did you find me?",
     placeholder: "Google, Instagram...",
-  },
-];
-
-const REQUIRED_FIELDS = [
-  {
-    key: "fullName",
-    type: "text",
-    label: "Full name",
-    placeholder: "John Doe",
-  },
-  {
-    key: "email",
-    type: "email",
-    label: "Email address",
-    placeholder: "john@example.com",
   },
 ];
 
@@ -86,14 +98,10 @@ intakeForm.put(
     const { intakeFields } = c.req.valid("json");
 
     await db.transaction(async (tx) => {
-      //--------------------------------------------------
-      // Find or create the default intake form
-      //--------------------------------------------------
-
       let form = await tx.query.forms.findFirst({
         where: and(
           eq(forms.organizationId, org.id),
-          eq(forms.slug, "default-intake")
+          eq(forms.slug, "default-intake"),
         ),
       });
 
@@ -102,7 +110,7 @@ intakeForm.put(
           .insert(forms)
           .values({
             organizationId: org.id,
-            name: "Client Intake Form",
+            title: "Client Intake Form",
             description: "Default onboarding intake form",
             slug: "default-intake",
           })
@@ -111,63 +119,43 @@ intakeForm.put(
         form = created;
       }
 
-      //--------------------------------------------------
-      // Remove existing fields
-      //--------------------------------------------------
+      await tx.delete(formFields).where(eq(formFields.formId, form.id));
 
-      await tx
-        .delete(formFields)
-        .where(eq(formFields.formId, form.id));
-
-      //--------------------------------------------------
-      // Always required
-      //--------------------------------------------------
-
-      let position = 1;
+      let position = 0;
 
       await tx.insert(formFields).values(
         REQUIRED_FIELDS.map((field) => ({
           formId: form.id,
-
-          key: field.key,
-
+          name: field.key,
           type: field.type,
-
           label: field.label,
-
           placeholder: field.placeholder,
-
+          helpText: null,
           required: true,
-
+          validation: null,
+          fieldOptions: null,
           position: position++,
-        }))
+        })),
       );
 
-      //--------------------------------------------------
-      // Enabled optional fields
-      //--------------------------------------------------
-
       const enabled = OPTIONAL_FIELDS.filter(
-        (field) => intakeFields[field.key as keyof typeof intakeFields]
+        (field) => intakeFields[field.key as keyof typeof intakeFields],
       );
 
       if (enabled.length > 0) {
         await tx.insert(formFields).values(
           enabled.map((field) => ({
-            formId: form!.id,
-
-            key: field.key,
-
+            formId: form.id,
+            name: field.key,
             type: field.type,
-
             label: field.label,
-
             placeholder: field.placeholder,
-
+            helpText: null,
             required: false,
-
+            validation: null,
+            fieldOptions: null,
             position: position++,
-          }))
+          })),
         );
       }
     });
@@ -175,7 +163,7 @@ intakeForm.put(
     return c.json({
       success: true,
     });
-  }
+  },
 );
 
 export default intakeForm;
