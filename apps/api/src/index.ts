@@ -7,10 +7,13 @@ import { logger } from "hono/logger";
 import { secureHeaders } from "hono/secure-headers";
 import type { AppEnv } from "@/types/hono";
 import { serveStatic } from "@hono/node-server/serve-static";
+import { handleAppError } from "@/lib/http-errors";
 
 import { auth } from "./auth";
 
-import leadsRoutes from "./routes/leads";
+import { leadRoutes } from "./modules/leads";
+import { formRoutes } from "./modules/forms";
+
 import meRoutes from "./routes/me";
 import onboardingRoutes from "./routes/onboarding";
 import upload from "./routes/upload";
@@ -97,18 +100,16 @@ app.use("/api/onboarding", secureHeaders());
 // Feature Routes
 // -----------------------------------------------------------------------------
 
-app.route("/api/leads", leadsRoutes);
+app.route("/api/leads", leadRoutes);
 app.route("/api/me", meRoutes);
 app.route("/api/onboarding", onboardingRoutes);
 app.route("/api/upload", upload);
+app.route("/api/forms", formRoutes);
 
 // -----------------------------------------------------------------------------
 // Server
 // -----------------------------------------------------------------------------
-app.onError((err, c) => {
-  console.error(err); // or your logger
-  return c.json({ error: "Internal Server Error" }, 500);
-});
+app.onError((err, c) => handleAppError(err, c));
 
 // -----------------------------------------------------------------------------
 // Health Check
