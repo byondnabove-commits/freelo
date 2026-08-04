@@ -1,5 +1,7 @@
 CREATE TYPE "public"."annotation_status" AS ENUM('open', 'approved', 'changes_requested');--> statement-breakpoint
 CREATE TYPE "public"."contract_status" AS ENUM('draft', 'sent', 'signed', 'declined');--> statement-breakpoint
+CREATE TYPE "public"."field_type" AS ENUM('text', 'textarea', 'email', 'phone', 'url', 'number', 'date', 'select', 'radio', 'checkbox');--> statement-breakpoint
+CREATE TYPE "public"."form_state" AS ENUM('draft', 'published');--> statement-breakpoint
 CREATE TYPE "public"."invoice_status" AS ENUM('draft', 'sent', 'paid', 'overdue', 'cancelled');--> statement-breakpoint
 CREATE TYPE "public"."lead_qualification" AS ENUM('unqualified', 'qualified');--> statement-breakpoint
 CREATE TYPE "public"."lead_status" AS ENUM('new', 'contacted', 'qualified', 'proposal_sent', 'negotiating', 'won', 'lost');--> statement-breakpoint
@@ -143,21 +145,24 @@ CREATE TABLE "files" (
 CREATE TABLE "form_fields" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"form_id" uuid NOT NULL,
-	"key" text NOT NULL,
-	"type" text NOT NULL,
+	"name" text NOT NULL,
+	"type" "field_type" NOT NULL,
 	"label" text NOT NULL,
 	"placeholder" text,
+	"help_text" text,
 	"required" boolean DEFAULT false NOT NULL,
-	"options" jsonb,
+	"validation" jsonb,
+	"field_options" jsonb,
 	"position" integer NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "form_submissions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"organization_id" text NOT NULL,
 	"form_id" uuid NOT NULL,
-	"submitted_at" timestamp DEFAULT now() NOT NULL,
 	"answers" jsonb DEFAULT '{}'::jsonb NOT NULL,
+	"submitted_at" timestamp DEFAULT now() NOT NULL,
 	"ip_address" text,
 	"user_agent" text,
 	"referrer" text
@@ -166,10 +171,13 @@ CREATE TABLE "form_submissions" (
 CREATE TABLE "forms" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"organization_id" text NOT NULL,
-	"name" text NOT NULL,
+	"title" text NOT NULL,
 	"description" text,
 	"slug" text NOT NULL,
-	"is_active" boolean DEFAULT true NOT NULL,
+	"state" "form_state" DEFAULT 'draft' NOT NULL,
+	"success_message" text DEFAULT 'Thank you! Your submission has been received.' NOT NULL,
+	"allow_multiple_submissions" boolean DEFAULT true NOT NULL,
+	"published_at" timestamp,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "forms_slug_unique" UNIQUE("slug")
@@ -345,6 +353,7 @@ ALTER TABLE "files" ADD CONSTRAINT "files_organization_id_organization_id_fk" FO
 ALTER TABLE "files" ADD CONSTRAINT "files_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "files" ADD CONSTRAINT "files_uploaded_by_user_id_fk" FOREIGN KEY ("uploaded_by") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "form_fields" ADD CONSTRAINT "form_fields_form_id_forms_id_fk" FOREIGN KEY ("form_id") REFERENCES "public"."forms"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "form_submissions" ADD CONSTRAINT "form_submissions_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "form_submissions" ADD CONSTRAINT "form_submissions_form_id_forms_id_fk" FOREIGN KEY ("form_id") REFERENCES "public"."forms"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "forms" ADD CONSTRAINT "forms_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invoice_line_items" ADD CONSTRAINT "invoice_line_items_organization_id_organization_id_fk" FOREIGN KEY ("organization_id") REFERENCES "public"."organization"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -382,6 +391,9 @@ CREATE INDEX "contracts_organization_id_idx" ON "contracts" USING btree ("organi
 CREATE INDEX "contracts_proposal_id_idx" ON "contracts" USING btree ("proposal_id");--> statement-breakpoint
 CREATE INDEX "files_organization_id_idx" ON "files" USING btree ("organization_id");--> statement-breakpoint
 CREATE INDEX "files_project_id_idx" ON "files" USING btree ("project_id");--> statement-breakpoint
+CREATE INDEX "form_fields_form_id_idx" ON "form_fields" USING btree ("form_id");--> statement-breakpoint
+CREATE INDEX "form_submissions_form_id_idx" ON "form_submissions" USING btree ("form_id");--> statement-breakpoint
+CREATE INDEX "form_submissions_organization_id_idx" ON "form_submissions" USING btree ("organization_id");--> statement-breakpoint
 CREATE INDEX "forms_organization_id_idx" ON "forms" USING btree ("organization_id");--> statement-breakpoint
 CREATE INDEX "invoice_line_items_organization_id_idx" ON "invoice_line_items" USING btree ("organization_id");--> statement-breakpoint
 CREATE INDEX "invoice_line_items_invoice_id_idx" ON "invoice_line_items" USING btree ("invoice_id");--> statement-breakpoint
