@@ -1,4 +1,5 @@
 import { formRepository } from "./repository";
+import { leadService } from "@/modules/leads/service";
 
 import {
   FormAlreadyPublishedError,
@@ -252,6 +253,16 @@ export class FormService {
       ipAddress: metadata.ipAddress ?? null,
       userAgent: metadata.userAgent ?? null,
       referrer: metadata.referrer ?? null,
+    });
+
+    // Direct call into the leads module — no event indirection. This is a
+    // straightforward "one write depends on another write" case; leads
+    // creation failing here should surface to the caller like any other
+    // part of the submit flow, not fail silently in a detached listener.
+    await leadService.createFromSubmission({
+      submissionId: submission.id,
+      organizationId: form.organizationId,
+      answers: data.answers,
     });
 
     return {
