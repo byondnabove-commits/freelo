@@ -12,6 +12,8 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 
+
+
 import {
   leadStatusEnum,
   leadQualificationEnum,
@@ -28,9 +30,6 @@ import {
 } from "./enums";
 
 import { organization, user } from "./auth";
-
-// We reference organization from better-auth tables
-// better-auth cli will generate those — we just reference by string here
 
 export const leads = pgTable(
   "leads",

@@ -147,6 +147,7 @@ export const FIELD_TYPES = [
   "select",
   "radio",
   "checkbox",
+  "file"
 ] as const;
 
 export type FieldType = (typeof FIELD_TYPES)[number];
