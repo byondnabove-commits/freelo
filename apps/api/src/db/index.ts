@@ -1,3 +1,6 @@
+import net from "node:net";
+net.setDefaultAutoSelectFamily(false);
+
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "@freelo/shared/db/schema/index.js";
