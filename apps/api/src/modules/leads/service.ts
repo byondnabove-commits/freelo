@@ -1,6 +1,10 @@
+// modules/leads/service.ts
 import { leadRepository } from "./repository";
 import { LEAD_FIELD_NAMES } from "./constants";
 import { InvalidLeadDataError, LeadNotFoundError } from "./errors";
+import { leadNotificationEmail, leadConfirmationEmail } from "./templates";
+import { sendEmail } from "@/services/email";
+import { getOrganizationContactEmail } from "@/lib/organization-contact";
 
 import type { LeadStatus } from "@freelo/shared/db/schema/values.js";
 
@@ -18,13 +22,6 @@ function asString(value: unknown): string | undefined {
 }
 
 export class LeadService {
-  /**
-   * Creates a lead directly from a form submission's answers.
-   * Called synchronously from FormService.submit() — if this throws,
-   * the whole submission request fails. `leads.name` and `leads.email`
-   * are NOT NULL, so a submission that doesn't map to both is treated
-   * as invalid lead data rather than silently skipped.
-   */
   async createFromSubmission(input: CreateFromSubmissionInput) {
     const { answers, organizationId, submissionId } = input;
 
@@ -37,27 +34,57 @@ export class LeadService {
       );
     }
 
-    return leadRepository.create({
+    const lead = await leadRepository.create({
       organizationId,
       submissionId,
       name,
       email,
-      phone: null, // no phone field on current default intake form
+      phone: null,
       company: asString(answers[LEAD_FIELD_NAMES.company]) ?? null,
       projectType: asString(answers[LEAD_FIELD_NAMES.projectType]) ?? null,
       budget: asString(answers[LEAD_FIELD_NAMES.budget]) ?? null,
       timeline: asString(answers[LEAD_FIELD_NAMES.timeline]) ?? null,
       description: asString(answers[LEAD_FIELD_NAMES.description]) ?? null,
     });
+
+    // Notifications are a side effect of lead creation, not part of its
+    // correctness — a Mailtrap hiccup shouldn't fail the client's form
+    // submission. Errors are caught and logged, never rethrown.
+    // modules/leads/service.ts — inside the try block
+
+    // modules/leads/service.ts — inside the try block
+
+    try {
+      const ownerEmail = await getOrganizationContactEmail(organizationId);
+
+      if (ownerEmail) {
+        await sendEmail({
+          to: ownerEmail,
+          subject: `New lead: ${lead.name}`,
+          html: leadNotificationEmail(lead),
+        });
+      }
+
+      // Mailtrap's testing sandbox rate-limits emails sent in rapid
+      // succession. A few seconds of headroom avoids "Too many emails
+      // per second" on the second send. Not needed on a real sending plan.
+      await new Promise((resolve) => setTimeout(resolve, 10000));
+
+      await sendEmail({
+        to: lead.email,
+        subject: "We received your submission",
+        html: leadConfirmationEmail(lead),
+      });
+    } catch (err) {
+      console.error("[leads] Failed to send notification emails:", err);
+    }
+
+    return lead;
   }
 
   async getById(organizationId: string, id: string) {
     const lead = await leadRepository.findById(organizationId, id);
-
-    if (!lead) {
-      throw new LeadNotFoundError();
-    }
-
+    if (!lead) throw new LeadNotFoundError();
     return lead;
   }
 
@@ -70,11 +97,7 @@ export class LeadService {
 
   async updateStatus(organizationId: string, id: string, status: LeadStatus) {
     const lead = await leadRepository.findById(organizationId, id);
-
-    if (!lead) {
-      throw new LeadNotFoundError();
-    }
-
+    if (!lead) throw new LeadNotFoundError();
     return leadRepository.updateStatus(id, status);
   }
 }
