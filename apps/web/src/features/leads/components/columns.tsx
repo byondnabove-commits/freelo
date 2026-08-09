@@ -1,6 +1,7 @@
 // features/leads/components/columns.tsx
 import type { Column, ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import type { Lead } from "../types";
 import { LeadStatusBadge } from "./lead-status-badge";
@@ -24,7 +25,12 @@ export const leadColumns: ColumnDef<Lead>[] = [
     accessorKey: "name",
     header: sortableHeader("Name"),
     cell: ({ row }) => (
-      <span className="font-medium">{row.original.name}</span>
+      <Link
+        to={`/dashboard/leads/${row.original.id}`}
+        className="font-medium hover:underline"
+      >
+        {row.original.name}
+      </Link>
     ),
   },
   {
