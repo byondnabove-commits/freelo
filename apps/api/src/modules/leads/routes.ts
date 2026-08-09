@@ -6,7 +6,8 @@ import { requireAuth } from "@/middleware/require-auth";
 import { requireOrg } from "@/middleware/require-org";
 
 import { leadService } from "./service";
-import { UpdateLeadStatusSchema, ListLeadsQuerySchema } from "./schema";
+import { UpdateLeadStatusSchema, ListLeadsQuerySchema, UpdateLeadNotesSchema } from "./schema";
+import { clientService } from "../clients";
 
 export const leadRoutes = new Hono<OrgEnv>();
 
@@ -50,3 +51,24 @@ leadRoutes.patch(
     return c.json({ data: lead });
   },
 );
+
+leadRoutes.patch(
+  "/:leadId/notes",
+  zValidator("json", UpdateLeadNotesSchema),
+  async (c) => {
+    const lead = await leadService.updateNotes(
+      c.get("organizationId"),
+      c.req.param("leadId"),
+      c.req.valid("json").notes,
+    );
+    return c.json({ data: lead });
+  },
+);
+
+leadRoutes.post("/:leadId/convert", async (c) => {
+  const client = await clientService.createFromLead(
+    c.get("organizationId"),
+    c.req.param("leadId"),
+  );
+  return c.json({ data: client }, 201);
+});

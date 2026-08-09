@@ -15,6 +15,7 @@ import { auth } from "./auth";
 
 import { leadRoutes } from "./modules/leads";
 import { formRoutes } from "./modules/forms";
+import { clientRoutes } from "./modules/clients";
 
 import meRoutes from "./routes/me";
 import onboardingRoutes from "./routes/onboarding";
@@ -107,6 +108,7 @@ app.route("/api/me", meRoutes);
 app.route("/api/onboarding", onboardingRoutes);
 app.route("/api/upload", upload);
 app.route("/api/forms", formRoutes);
+app.route("/api/clients", clientRoutes);
 
 // -----------------------------------------------------------------------------
 // Server

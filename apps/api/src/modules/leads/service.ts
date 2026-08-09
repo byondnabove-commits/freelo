@@ -100,6 +100,13 @@ export class LeadService {
     if (!lead) throw new LeadNotFoundError();
     return leadRepository.updateStatus(id, status);
   }
+
+  // add inside LeadService, alongside updateStatus
+  async updateNotes(organizationId: string, id: string, notes: string | null) {
+    const lead = await leadRepository.findById(organizationId, id);
+    if (!lead) throw new LeadNotFoundError();
+    return leadRepository.update(id, { notes });
+  }
 }
 
 export const leadService = new LeadService();

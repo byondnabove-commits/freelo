@@ -14,6 +14,9 @@ import {
   InvalidLeadDataError,
 } from "@/modules/leads/errors";
 
+import { ClientNotFoundError, LeadAlreadyConvertedError } from "@/modules/clients/errors";
+
+
 const ERROR_STATUS_MAP = [
   [FormNotFoundError, 404],
   [FormFieldNotFoundError, 404],
@@ -22,6 +25,8 @@ const ERROR_STATUS_MAP = [
   [MaxFieldsReachedError, 422],
   [InvalidSubmissionError, 400],
   [InvalidLeadDataError, 400],
+  [ClientNotFoundError, 404],
+  [LeadAlreadyConvertedError, 409],
 ] as const;
 
 export function handleAppError(err: unknown, c: Context) {
