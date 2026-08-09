@@ -21,6 +21,9 @@ import ContractsPage from "@/features/contracts";
 import FormsPage from "@/features/forms";
 import SettingsPage from "@/features/settings";
 import ProfilePage from "@/features/profile";
+import LeadDetailPage from "@/features/leads/pages/LeadDetailPage";
+import ClientsPage from "@/features/clients";
+import ClientDetailPage from "@/features/clients/pages/ClientDetailPage";
 
 import PortalPage from "@/features/portal";
 import { AuthOnlyRoute } from "./components/layout/AuthOnlyRoute";
@@ -56,12 +59,15 @@ export default function App() {
             <Route path="projects" element={<ProjectsPage />} />
             <Route path="crm" element={<CRMPage />} />
             <Route path="leads" element={<LeadsPage />} />
+            <Route path="leads/:leadId" element={<LeadDetailPage />} />
             <Route path="kanban" element={<KanbanPage />} />
             <Route path="proposals" element={<ProposalsPage />} />
             <Route path="contracts" element={<ContractsPage />} />
             <Route path="forms" element={<FormsPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="profile" element={<ProfilePage />} />
+            <Route path="clients" element={<ClientsPage />} />
+            <Route path="clients/:clientId" element={<ClientDetailPage />} />
           </Route>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Route>

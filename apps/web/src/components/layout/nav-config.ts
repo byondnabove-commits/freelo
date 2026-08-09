@@ -31,6 +31,7 @@ export const navigationStructure: NavSection[] = [
       { label: "Projects", path: "/dashboard/projects", icon: FolderKanban },
       { label: "CRM", path: "/dashboard/crm", icon: Users2 },
       { label: "Leads", path: "/dashboard/leads", icon: Contact2 },
+      { label: "Clients", path: "/dashboard/clients", icon: Users },
       { label: "Kanban", path: "/dashboard/kanban", icon: Users },
       { label: "Proposals", path: "/dashboard/proposals", icon: FileText },
       { label: "Contracts", path: "/dashboard/contracts", icon: FileSignature },
