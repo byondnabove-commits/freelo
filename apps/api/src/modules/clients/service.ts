@@ -48,7 +48,10 @@ export class ClientService {
     return client;
   }
 
-  async list(organizationId: string, options?: { limit?: number; offset?: number }) {
+  async list(
+    organizationId: string,
+    options?: { limit?: number; offset?: number },
+  ) {
     return clientRepository.findByOrganizationId(organizationId, options);
   }
 
@@ -62,6 +65,12 @@ export class ClientService {
     const client = await clientRepository.findByPortalToken(token);
     if (!client) throw new ClientNotFoundError();
     return client;
+  }
+  // add inside ClientService
+  async delete(organizationId: string, id: string) {
+    const client = await clientRepository.findById(organizationId, id);
+    if (!client) throw new ClientNotFoundError();
+    await clientRepository.delete(id);
   }
 }
 

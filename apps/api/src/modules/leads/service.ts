@@ -107,6 +107,13 @@ export class LeadService {
     if (!lead) throw new LeadNotFoundError();
     return leadRepository.update(id, { notes });
   }
+
+  // add inside LeadService
+async delete(organizationId: string, id: string) {
+  const lead = await leadRepository.findById(organizationId, id);
+  if (!lead) throw new LeadNotFoundError();
+  await leadRepository.delete(id);
+}
 }
 
 export const leadService = new LeadService();

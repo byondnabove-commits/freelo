@@ -6,7 +6,11 @@ import { requireAuth } from "@/middleware/require-auth";
 import { requireOrg } from "@/middleware/require-org";
 
 import { leadService } from "./service";
-import { UpdateLeadStatusSchema, ListLeadsQuerySchema, UpdateLeadNotesSchema } from "./schema";
+import {
+  UpdateLeadStatusSchema,
+  ListLeadsQuerySchema,
+  UpdateLeadNotesSchema,
+} from "./schema";
 import { clientService } from "../clients";
 
 export const leadRoutes = new Hono<OrgEnv>();
@@ -14,20 +18,16 @@ export const leadRoutes = new Hono<OrgEnv>();
 leadRoutes.use("*", requireAuth);
 leadRoutes.use("*", requireOrg);
 
-leadRoutes.get(
-  "/",
-  zValidator("query", ListLeadsQuerySchema),
-  async (c) => {
-    const { limit, offset } = c.req.valid("query");
+leadRoutes.get("/", zValidator("query", ListLeadsQuerySchema), async (c) => {
+  const { limit, offset } = c.req.valid("query");
 
-    const leads = await leadService.list(c.get("organizationId"), {
-      limit,
-      offset,
-    });
+  const leads = await leadService.list(c.get("organizationId"), {
+    limit,
+    offset,
+  });
 
-    return c.json({ data: leads });
-  },
-);
+  return c.json({ data: leads });
+});
 
 leadRoutes.get("/:leadId", async (c) => {
   const lead = await leadService.getById(
@@ -71,4 +71,10 @@ leadRoutes.post("/:leadId/convert", async (c) => {
     c.req.param("leadId"),
   );
   return c.json({ data: client }, 201);
+});
+
+// add alongside existing routes
+leadRoutes.delete("/:leadId", async (c) => {
+  await leadService.delete(c.get("organizationId"), c.req.param("leadId"));
+  return c.json({ success: true });
 });

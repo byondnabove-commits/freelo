@@ -18,7 +18,10 @@ clientRoutes.get(
   zValidator("query", ListClientsQuerySchema),
   async (c) => {
     const { limit, offset } = c.req.valid("query");
-    const clients = await clientService.list(c.get("organizationId"), { limit, offset });
+    const clients = await clientService.list(c.get("organizationId"), {
+      limit,
+      offset,
+    });
     return c.json({ data: clients });
   },
 );
@@ -43,3 +46,9 @@ clientRoutes.patch(
     return c.json({ data: client });
   },
 );
+
+// add alongside existing routes
+clientRoutes.delete("/:clientId", async (c) => {
+  await clientService.delete(c.get("organizationId"), c.req.param("clientId"));
+  return c.json({ success: true });
+});
