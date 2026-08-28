@@ -1,5 +1,5 @@
-import { setDefaultResultOrder } from "node:dns";
-setDefaultResultOrder("ipv4first");
+// import { setDefaultResultOrder } from "node:dns";
+// setDefaultResultOrder("ipv4first");
 import "dotenv/config";
 
 import { Hono } from "hono";
@@ -16,6 +16,8 @@ import { auth } from "./auth";
 import { leadRoutes } from "./modules/leads";
 import { formRoutes } from "./modules/forms";
 import { clientRoutes } from "./modules/clients";
+import { projectRoutes } from "./modules/projects";
+
 
 import meRoutes from "./routes/me";
 import onboardingRoutes from "./routes/onboarding";
@@ -109,6 +111,7 @@ app.route("/api/onboarding", onboardingRoutes);
 app.route("/api/upload", upload);
 app.route("/api/forms", formRoutes);
 app.route("/api/clients", clientRoutes);
+app.route("/api/projects", projectRoutes);
 
 // -----------------------------------------------------------------------------
 // Server
