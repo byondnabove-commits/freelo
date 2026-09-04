@@ -53,9 +53,10 @@ export const leadColumns: ColumnDef<Lead>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    cell: ({ row }) => (
-      <LeadStatusBadge leadId={row.original.id} status={row.original.status} />
-    ),
+    // Was <LeadStatusBadge leadId={row.original.id} status={row.original.status} />
+    // — now needs the full lead for the conversion dialog's deal summary
+    // and project template.
+    cell: ({ row }) => <LeadStatusBadge lead={row.original} />,
   },
   {
     accessorKey: "createdAt",

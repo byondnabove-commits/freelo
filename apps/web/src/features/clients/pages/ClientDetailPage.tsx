@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useClient } from "../hooks/use-client";
 import { useUpdateClient } from "../hooks/use-update-client";
 import { NotesEditor } from "@/features/leads/components/notes-editor";
+import { DeleteClientButton } from "../components/delete-client-button";
 
 export default function ClientDetailPage() {
   const { clientId } = useParams<{ clientId: string }>();
@@ -37,6 +38,7 @@ export default function ClientDetailPage() {
         <h1 className="text-2xl font-semibold">{client.name}</h1>
         <p className="text-sm text-muted-foreground">{client.email}</p>
       </div>
+      <DeleteClientButton clientId={client.id} clientName={client.name} />
 
       <Card>
         <CardHeader>

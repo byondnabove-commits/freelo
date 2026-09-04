@@ -1,6 +1,6 @@
 CREATE TYPE "public"."annotation_status" AS ENUM('open', 'approved', 'changes_requested');--> statement-breakpoint
 CREATE TYPE "public"."contract_status" AS ENUM('draft', 'sent', 'signed', 'declined');--> statement-breakpoint
-CREATE TYPE "public"."field_type" AS ENUM('text', 'textarea', 'email', 'phone', 'url', 'number', 'date', 'select', 'radio', 'checkbox');--> statement-breakpoint
+CREATE TYPE "public"."field_type" AS ENUM('text', 'textarea', 'email', 'phone', 'url', 'number', 'date', 'select', 'radio', 'checkbox', 'file');--> statement-breakpoint
 CREATE TYPE "public"."form_state" AS ENUM('draft', 'published');--> statement-breakpoint
 CREATE TYPE "public"."invoice_status" AS ENUM('draft', 'sent', 'paid', 'overdue', 'cancelled');--> statement-breakpoint
 CREATE TYPE "public"."lead_qualification" AS ENUM('unqualified', 'qualified');--> statement-breakpoint

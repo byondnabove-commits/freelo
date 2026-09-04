@@ -10,6 +10,7 @@ import {
   UpdateLeadStatusSchema,
   ListLeadsQuerySchema,
   UpdateLeadNotesSchema,
+  ConvertLeadSchema,
 } from "./schema";
 import { clientService } from "../clients";
 
@@ -65,15 +66,23 @@ leadRoutes.patch(
   },
 );
 
-leadRoutes.post("/:leadId/convert", async (c) => {
-  const client = await clientService.createFromLead(
-    c.get("organizationId"),
-    c.req.param("leadId"),
-  );
-  return c.json({ data: client }, 201);
-});
+// Response shape changed: previously `{ data: Client }`, now
+// `{ data: { client: Client, project: Project | null } }` — the frontend
+// convertLead() wrapper and anywhere that calls it need updating to match.
+leadRoutes.post(
+  "/:leadId/convert",
+  zValidator("json", ConvertLeadSchema),
+  async (c) => {
+    const { project } = c.req.valid("json");
+    const result = await clientService.createFromLead(
+      c.get("organizationId"),
+      c.req.param("leadId"),
+      project,
+    );
+    return c.json({ data: result }, 201);
+  },
+);
 
-// add alongside existing routes
 leadRoutes.delete("/:leadId", async (c) => {
   await leadService.delete(c.get("organizationId"), c.req.param("leadId"));
   return c.json({ success: true });

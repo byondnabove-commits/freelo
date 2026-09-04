@@ -2,6 +2,7 @@ import { and, desc, eq } from "drizzle-orm";
 import type { InferInsertModel } from "drizzle-orm";
 
 import { db } from "@/db";
+import type { DbOrTx } from "@/db/types";
 import { clients } from "@freelo/shared/db/schema/app.js";
 
 type NewClient = InferInsertModel<typeof clients>;
@@ -13,8 +14,8 @@ export interface PaginationOptions {
 }
 
 export class ClientRepository {
-  async create(data: NewClient) {
-    const [client] = await db.insert(clients).values(data).returning();
+  async create(data: NewClient, tx: DbOrTx = db) {
+    const [client] = await tx.insert(clients).values(data).returning();
     return client;
   }
 
@@ -24,8 +25,11 @@ export class ClientRepository {
     });
   }
 
-  async findByLeadId(leadId: string) {
-    return db.query.clients.findFirst({
+  // tx added: called both standalone (e.g. LeadService.getById's
+  // convertedClient check) and inside the conversion transaction (the
+  // double-conversion guard) — must see uncommitted writes in the latter case.
+  async findByLeadId(leadId: string, tx: DbOrTx = db) {
+    return tx.query.clients.findFirst({
       where: eq(clients.leadId, leadId),
     });
   }

@@ -1,5 +1,6 @@
 // modules/leads/service.ts
 import { leadRepository } from "./repository";
+import { clientRepository } from "@/modules/clients/repository";
 import { LEAD_FIELD_NAMES } from "./constants";
 import { InvalidLeadDataError, LeadNotFoundError } from "./errors";
 import { leadNotificationEmail, leadConfirmationEmail } from "./templates";
@@ -50,10 +51,6 @@ export class LeadService {
     // Notifications are a side effect of lead creation, not part of its
     // correctness — a Mailtrap hiccup shouldn't fail the client's form
     // submission. Errors are caught and logged, never rethrown.
-    // modules/leads/service.ts — inside the try block
-
-    // modules/leads/service.ts — inside the try block
-
     try {
       const ownerEmail = await getOrganizationContactEmail(organizationId);
 
@@ -85,7 +82,18 @@ export class LeadService {
   async getById(organizationId: string, id: string) {
     const lead = await leadRepository.findById(organizationId, id);
     if (!lead) throw new LeadNotFoundError();
-    return lead;
+
+    // The real conversion signal — NOT lead.status. A lead's status can be
+    // set to "won" independently of conversion ever happening (e.g. the
+    // freelancer picks "Not yet" in the conversion dialog), so status alone
+    // can never answer "has this lead been converted." Whether a client
+    // row exists is the only fact that actually answers that question.
+    const client = await clientRepository.findByLeadId(id);
+
+    return {
+      ...lead,
+      convertedClient: client ? { id: client.id, name: client.name } : null,
+    };
   }
 
   async list(
@@ -101,19 +109,17 @@ export class LeadService {
     return leadRepository.updateStatus(id, status);
   }
 
-  // add inside LeadService, alongside updateStatus
   async updateNotes(organizationId: string, id: string, notes: string | null) {
     const lead = await leadRepository.findById(organizationId, id);
     if (!lead) throw new LeadNotFoundError();
     return leadRepository.update(id, { notes });
   }
 
-  // add inside LeadService
-async delete(organizationId: string, id: string) {
-  const lead = await leadRepository.findById(organizationId, id);
-  if (!lead) throw new LeadNotFoundError();
-  await leadRepository.delete(id);
-}
+  async delete(organizationId: string, id: string) {
+    const lead = await leadRepository.findById(organizationId, id);
+    if (!lead) throw new LeadNotFoundError();
+    await leadRepository.delete(id);
+  }
 }
 
 export const leadService = new LeadService();

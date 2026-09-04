@@ -11,8 +11,12 @@ export function useUpdateLeadStatus() {
   return useMutation({
     mutationFn: ({ leadId, status }: { leadId: string; status: LeadStatus }) =>
       updateLeadStatus(leadId, status),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["leads"] });
+      // Was missing — without this, changing status from LeadDetailPage's
+      // own status badge left the page showing stale data (status,
+      // convertedClient) until something else forced a refetch.
+      queryClient.invalidateQueries({ queryKey: ["lead", variables.leadId] });
     },
     onError: (err) => {
       const message =

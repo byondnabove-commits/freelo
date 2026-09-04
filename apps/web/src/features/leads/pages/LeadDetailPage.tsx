@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLead } from "../hooks/use-lead";
@@ -6,6 +6,7 @@ import { useUpdateLeadNotes } from "../hooks/use-update-lead-notes";
 import { useConvertLead } from "../hooks/use-convert-lead";
 import { LeadStatusBadge } from "../components/lead-status-badge";
 import { NotesEditor } from "../components/notes-editor";
+import { DeleteLeadButton } from "../components/delete-lead-button";
 
 export default function LeadDetailPage() {
   const { leadId } = useParams<{ leadId: string }>();
@@ -22,7 +23,10 @@ export default function LeadDetailPage() {
   }
 
   const lead = data.data;
-  const alreadyClient = lead.status === "won";
+  // Real signal, not lead.status — a lead can be "won" without ever having
+  // been converted (e.g. someone picks "Not yet" in the conversion dialog),
+  // so status alone can never answer "does a client exist for this lead."
+  const convertedClient = lead.convertedClient;
 
   return (
     <div className="space-y-6">
@@ -31,7 +35,11 @@ export default function LeadDetailPage() {
           <h1 className="text-2xl font-semibold">{lead.name}</h1>
           <p className="text-sm text-muted-foreground">{lead.email}</p>
         </div>
-        <LeadStatusBadge leadId={lead.id} status={lead.status} />
+        {/* navigateOnConvert: true — this page is already focused on one
+            lead, so jumping to the new client/project on conversion is the
+            right move here (unlike the leads table, which defaults to false). */}
+        <LeadStatusBadge lead={lead} navigateOnConvert />
+        <DeleteLeadButton leadId={lead.id} leadName={lead.name} />
       </div>
 
       <Card>
@@ -66,16 +74,17 @@ export default function LeadDetailPage() {
         </CardContent>
       </Card>
 
-      <Button
-        onClick={() => convert()}
-        disabled={isConverting || alreadyClient}
-      >
-        {alreadyClient
-          ? "Already converted"
-          : isConverting
-            ? "Converting..."
-            : "Convert to client"}
-      </Button>
+      {convertedClient ? (
+        <Button variant="secondary" asChild>
+          <Link to={`/dashboard/clients/${convertedClient.id}`}>
+            View client: {convertedClient.name} →
+          </Link>
+        </Button>
+      ) : (
+        <Button onClick={() => convert(undefined)} disabled={isConverting}>
+          {isConverting ? "Converting..." : "Convert to client"}
+        </Button>
+      )}
     </div>
   );
 }

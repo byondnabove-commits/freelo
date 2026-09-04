@@ -1,5 +1,5 @@
 {
-  "id": "753828ae-881f-4888-919a-532c0d606609",
+  "id": "751b8b65-ab47-42d7-ae13-325e8343b97b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -3001,7 +3001,8 @@
         "date",
         "select",
         "radio",
-        "checkbox"
+        "checkbox",
+        "file"
       ]
     },
     "public.form_state": {

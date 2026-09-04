@@ -10,6 +10,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@freelo/shared": "workspace:*",
     "@hono/node-server": "^2.0.4",
     "@hono/zod-validator": "^0.8.0",
     "better-auth": "^1.6.18",
@@ -22,12 +23,11 @@
     "postgres": "^3.4.9",
     "resend": "^6.12.4",
     "uuid": "^14.0.1",
-    "zod": "^4.4.3",
-    "@freelo/shared": "workspace:*"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^25.9.3",
-    "@types/nodemailer": "^8.0.1",
+    "@types/nodemailer": "^6.4.24",
     "drizzle-kit": "^0.31.10",
     "tsx": "^4.22.4"
   }

@@ -2,14 +2,17 @@ import { and, eq, asc } from "drizzle-orm";
 import type { InferInsertModel } from "drizzle-orm";
 
 import { db } from "@/db";
+import type { DbOrTx } from "@/db/types";
 import { projects } from "@freelo/shared/db/schema/app.js";
 
 type NewProject = InferInsertModel<typeof projects>;
 type ProjectUpdate = Partial<Omit<NewProject, "id" | "organizationId" | "createdAt">>;
 
 export class ProjectRepository {
-  async create(data: NewProject) {
-    const [project] = await db.insert(projects).values(data).returning();
+  // tx added: called from inside ClientService.createFromLead's transaction
+  // when a project is created as part of lead conversion.
+  async create(data: NewProject, tx: DbOrTx = db) {
+    const [project] = await tx.insert(projects).values(data).returning();
     return project;
   }
 
