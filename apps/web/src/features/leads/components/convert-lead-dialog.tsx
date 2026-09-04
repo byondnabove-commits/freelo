@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { Lead } from "../../../types";
+import type { Lead } from "../types";
 import type { ConvertLeadProjectInput } from "../api/convert-lead";
 import { buildDefaultProjectName, guessDeadlineFromTimeline } from "../lib/project-template";
 
