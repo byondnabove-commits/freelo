@@ -1,10 +1,13 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, ne } from "drizzle-orm";
 import type { InferInsertModel } from "drizzle-orm";
 
 import { db } from "@/db";
 import type { DbOrTx } from "@/db/types";
 import { leads } from "@freelo/shared/db/schema/app.js";
-import type { LeadStatus } from "@freelo/shared/db/schema/values.js";
+import type {
+  LeadStatus,
+  LeadLostReason,
+} from "@freelo/shared/db/schema/values.js";
 
 type NewLead = InferInsertModel<typeof leads>;
 type LeadUpdate = Partial<Omit<NewLead, "id" | "organizationId" | "createdAt">>;
@@ -12,6 +15,10 @@ type LeadUpdate = Partial<Omit<NewLead, "id" | "organizationId" | "createdAt">>;
 export interface PaginationOptions {
   limit?: number;
   offset?: number;
+  // When false/omitted, lost leads are excluded — same "archived" pattern
+  // used elsewhere, applied here at the query level so nowhere can
+  // accidentally forget to filter them.
+  includeLost?: boolean;
 }
 
 export class LeadRepository {
@@ -20,9 +27,6 @@ export class LeadRepository {
     return lead;
   }
 
-  // tx added: this is called from inside ClientService.createFromLead's
-  // transaction, so it needs to see the client-creation transaction's
-  // uncommitted state (and roll back with it on failure).
   async findById(organizationId: string, id: string, tx: DbOrTx = db) {
     return tx.query.leads.findFirst({
       where: and(eq(leads.id, id), eq(leads.organizationId, organizationId)),
@@ -31,10 +35,15 @@ export class LeadRepository {
 
   async findByOrganizationId(
     organizationId: string,
-    { limit, offset }: PaginationOptions = {},
+    { limit, offset, includeLost = false }: PaginationOptions = {},
   ) {
     return db.query.leads.findMany({
-      where: eq(leads.organizationId, organizationId),
+      where: includeLost
+        ? eq(leads.organizationId, organizationId)
+        : and(
+            eq(leads.organizationId, organizationId),
+            ne(leads.status, "lost"),
+          ),
       orderBy: desc(leads.createdAt),
       limit,
       offset,
@@ -47,12 +56,23 @@ export class LeadRepository {
     });
   }
 
-  // tx added: same reason as findById above — this is the write that marks
-  // a lead "won" as part of the conversion transaction.
   async updateStatus(id: string, status: LeadStatus, tx: DbOrTx = db) {
     const [lead] = await tx
       .update(leads)
       .set({ status })
+      .where(eq(leads.id, id))
+      .returning();
+
+    return lead;
+  }
+
+  // Always sets status and lostReason together — these two fields only
+  // ever make sense as a pair, so there's no path that sets one without
+  // the other.
+  async markAsLost(id: string, reason: LeadLostReason) {
+    const [lead] = await db
+      .update(leads)
+      .set({ status: "lost", lostReason: reason })
       .where(eq(leads.id, id))
       .returning();
 
