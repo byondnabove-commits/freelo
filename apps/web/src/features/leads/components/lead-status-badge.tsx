@@ -11,13 +11,12 @@ import type { Lead, LeadStatus } from "../types";
 import { useUpdateLeadStatus } from "../hooks/use-update-lead-status";
 import { useConvertLead } from "../hooks/use-convert-lead";
 import type { ConvertLeadProjectInput } from "../api/convert-lead";
+import { useMarkLeadLost } from "../hooks/use-mark-lead-lost";
 import { useOrgPreferences } from "@/features/settings/hooks/use-org-preferences";
 import { useUpdateOrgPreferences } from "@/features/settings/hooks/use-update-org-preferences";
 import { ConvertLeadDialog } from "./convert-lead-dialog";
-import {
-  buildDefaultProjectName,
-  guessDeadlineFromTimeline,
-} from "../lib/project-template";
+import { MarkLeadLostDialog } from "./mark-lead-lost-dialog";
+import { buildDefaultProjectName, guessDeadlineFromTimeline } from "../lib/project-template";
 import { toast } from "sonner";
 
 const STATUS_STYLES: Record<LeadStatus, string> = {
@@ -44,31 +43,33 @@ interface LeadStatusBadgeProps {
   navigateOnConvert?: boolean;
 }
 
-export function LeadStatusBadge({
-  lead,
-  navigateOnConvert = false,
-}: LeadStatusBadgeProps) {
-  const [dialogOpen, setDialogOpen] = useState(false);
+export function LeadStatusBadge({ lead, navigateOnConvert = false }: LeadStatusBadgeProps) {
+  const [convertDialogOpen, setConvertDialogOpen] = useState(false);
+  const [lostDialogOpen, setLostDialogOpen] = useState(false);
 
-  const { mutate: updateStatus, isPending: isUpdatingStatus } =
-    useUpdateLeadStatus();
+  const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdateLeadStatus();
   const { mutate: convert, isPending: isConverting } = useConvertLead(lead.id, {
     navigateOnConvert,
   });
+  const { mutate: markLost, isPending: isMarkingLost } = useMarkLeadLost(lead.id);
   const { data: preferencesRes } = useOrgPreferences();
   const { mutate: updatePreferences } = useUpdateOrgPreferences();
 
-  const isPending = isUpdatingStatus || isConverting;
+  const isPending = isUpdatingStatus || isConverting || isMarkingLost;
 
   function handleValueChange(next: LeadStatus) {
+    if (next === "lost") {
+      // Backend rejects a bare status="lost" (LostReasonRequiredError) —
+      // this dialog is the only path that can actually set it.
+      setLostDialogOpen(true);
+      return;
+    }
+
     const transitioningToWon = next === "won" && lead.status !== "won";
     const notYetConverted = !lead.convertedClient;
 
     if (transitioningToWon && notYetConverted) {
       if (preferencesRes?.data.autoConvertLeadsOnWon) {
-        // Silent path: same template logic the dialog pre-fills, just
-        // applied without asking. The mutation's own onSuccess toast
-        // covers user feedback — no need to duplicate it here.
         convert({
           name: buildDefaultProjectName(lead),
           description: lead.description,
@@ -77,18 +78,16 @@ export function LeadStatusBadge({
         return;
       }
 
-      setDialogOpen(true);
+      setConvertDialogOpen(true);
       return;
     }
 
     updateStatus({ leadId: lead.id, status: next });
   }
 
-  // Dismissing the dialog without clicking a button (outside click, Escape)
-  // intentionally does nothing — no status change, no conversion. The
-  // Select's value is driven by `lead.status` from the query cache, which
-  // hasn't changed, so it naturally reverts to showing the original status
-  // with no extra code needed here.
+  // Dismissing either dialog without confirming does nothing — no status
+  // change, no side effect. The Select's value reflects lead.status from
+  // the query cache, which hasn't changed, so it reverts on its own.
 
   function handleSkip(alwaysAuto: boolean) {
     updateStatus({ leadId: lead.id, status: "won" });
@@ -101,13 +100,10 @@ export function LeadStatusBadge({
         },
       );
     }
-    setDialogOpen(false);
+    setConvertDialogOpen(false);
   }
 
-  function handleConvert(
-    project: ConvertLeadProjectInput,
-    alwaysAuto: boolean,
-  ) {
+  function handleConvert(project: ConvertLeadProjectInput, alwaysAuto: boolean) {
     convert(project);
     if (alwaysAuto) {
       updatePreferences(
@@ -118,18 +114,19 @@ export function LeadStatusBadge({
         },
       );
     }
-    setDialogOpen(false);
+    setConvertDialogOpen(false);
+  }
+
+  function handleConfirmLost(reason: Parameters<typeof markLost>[0]) {
+    markLost(reason);
+    setLostDialogOpen(false);
   }
 
   return (
     <>
-      <Select
-        value={lead.status}
-        disabled={isPending}
-        onValueChange={handleValueChange}
-      >
+      <Select value={lead.status} disabled={isPending} onValueChange={handleValueChange}>
         <SelectTrigger
-          className={`h-7 w-[150px] rounded-full border px-3 text-xs font-medium ${STATUS_STYLES[lead.status]}`}
+          className={`h-7 w-37.5 rounded-full border px-3 text-xs font-medium ${STATUS_STYLES[lead.status]}`}
         >
           <SelectValue>{formatStatus(lead.status)}</SelectValue>
         </SelectTrigger>
@@ -144,11 +141,19 @@ export function LeadStatusBadge({
 
       <ConvertLeadDialog
         lead={lead}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        open={convertDialogOpen}
+        onOpenChange={setConvertDialogOpen}
         onSkip={handleSkip}
         onConvert={handleConvert}
         isSubmitting={isConverting}
+      />
+
+      <MarkLeadLostDialog
+        lead={lead}
+        open={lostDialogOpen}
+        onOpenChange={setLostDialogOpen}
+        onConfirm={handleConfirmLost}
+        isSubmitting={isMarkingLost}
       />
     </>
   );

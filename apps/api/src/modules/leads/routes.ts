@@ -11,6 +11,7 @@ import {
   ListLeadsQuerySchema,
   UpdateLeadNotesSchema,
   ConvertLeadSchema,
+  MarkLeadLostSchema,
 } from "./schema";
 import { clientService } from "../clients";
 
@@ -20,11 +21,12 @@ leadRoutes.use("*", requireAuth);
 leadRoutes.use("*", requireOrg);
 
 leadRoutes.get("/", zValidator("query", ListLeadsQuerySchema), async (c) => {
-  const { limit, offset } = c.req.valid("query");
+  const { limit, offset, includeLost } = c.req.valid("query");
 
   const leads = await leadService.list(c.get("organizationId"), {
     limit,
     offset,
+    includeLost,
   });
 
   return c.json({ data: leads });
@@ -53,6 +55,23 @@ leadRoutes.patch(
   },
 );
 
+// Dedicated endpoint — status="lost" is rejected on the generic /status
+// route above (LostReasonRequiredError) precisely so this one can't be
+// bypassed.
+leadRoutes.patch(
+  "/:leadId/lost",
+  zValidator("json", MarkLeadLostSchema),
+  async (c) => {
+    const lead = await leadService.markAsLost(
+      c.get("organizationId"),
+      c.req.param("leadId"),
+      c.req.valid("json").reason,
+    );
+
+    return c.json({ data: lead });
+  },
+);
+
 leadRoutes.patch(
   "/:leadId/notes",
   zValidator("json", UpdateLeadNotesSchema),
@@ -66,9 +85,6 @@ leadRoutes.patch(
   },
 );
 
-// Response shape changed: previously `{ data: Client }`, now
-// `{ data: { client: Client, project: Project | null } }` — the frontend
-// convertLead() wrapper and anywhere that calls it need updating to match.
 leadRoutes.post(
   "/:leadId/convert",
   zValidator("json", ConvertLeadSchema),

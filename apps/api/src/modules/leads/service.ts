@@ -2,12 +2,19 @@
 import { leadRepository } from "./repository";
 import { clientRepository } from "@/modules/clients/repository";
 import { LEAD_FIELD_NAMES } from "./constants";
-import { InvalidLeadDataError, LeadNotFoundError } from "./errors";
+import {
+  InvalidLeadDataError,
+  LeadNotFoundError,
+  LostReasonRequiredError,
+} from "./errors";
 import { leadNotificationEmail, leadConfirmationEmail } from "./templates";
 import { sendEmail } from "@/services/email";
 import { getOrganizationContactEmail } from "@/lib/organization-contact";
 
-import type { LeadStatus } from "@freelo/shared/db/schema/values.js";
+import type {
+  LeadStatus,
+  LeadLostReason,
+} from "@freelo/shared/db/schema/values.js";
 
 type CreateFromSubmissionInput = {
   submissionId: string;
@@ -48,9 +55,6 @@ export class LeadService {
       description: asString(answers[LEAD_FIELD_NAMES.description]) ?? null,
     });
 
-    // Notifications are a side effect of lead creation, not part of its
-    // correctness — a Mailtrap hiccup shouldn't fail the client's form
-    // submission. Errors are caught and logged, never rethrown.
     try {
       const ownerEmail = await getOrganizationContactEmail(organizationId);
 
@@ -62,9 +66,6 @@ export class LeadService {
         });
       }
 
-      // Mailtrap's testing sandbox rate-limits emails sent in rapid
-      // succession. A few seconds of headroom avoids "Too many emails
-      // per second" on the second send. Not needed on a real sending plan.
       await new Promise((resolve) => setTimeout(resolve, 10000));
 
       await sendEmail({
@@ -83,11 +84,6 @@ export class LeadService {
     const lead = await leadRepository.findById(organizationId, id);
     if (!lead) throw new LeadNotFoundError();
 
-    // The real conversion signal — NOT lead.status. A lead's status can be
-    // set to "won" independently of conversion ever happening (e.g. the
-    // freelancer picks "Not yet" in the conversion dialog), so status alone
-    // can never answer "has this lead been converted." Whether a client
-    // row exists is the only fact that actually answers that question.
     const client = await clientRepository.findByLeadId(id);
 
     return {
@@ -98,15 +94,28 @@ export class LeadService {
 
   async list(
     organizationId: string,
-    options?: { limit?: number; offset?: number },
+    options?: { limit?: number; offset?: number; includeLost?: boolean },
   ) {
     return leadRepository.findByOrganizationId(organizationId, options);
   }
 
   async updateStatus(organizationId: string, id: string, status: LeadStatus) {
+    // "lost" always requires a reason — enforced here, not just by
+    // frontend discipline, so no caller of this service can accidentally
+    // skip it.
+    if (status === "lost") {
+      throw new LostReasonRequiredError();
+    }
+
     const lead = await leadRepository.findById(organizationId, id);
     if (!lead) throw new LeadNotFoundError();
     return leadRepository.updateStatus(id, status);
+  }
+
+  async markAsLost(organizationId: string, id: string, reason: LeadLostReason) {
+    const lead = await leadRepository.findById(organizationId, id);
+    if (!lead) throw new LeadNotFoundError();
+    return leadRepository.markAsLost(id, reason);
   }
 
   async updateNotes(organizationId: string, id: string, notes: string | null) {

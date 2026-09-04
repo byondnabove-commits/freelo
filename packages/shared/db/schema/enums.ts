@@ -3,6 +3,7 @@ import { pgEnum } from "drizzle-orm/pg-core";
 import {
   LEAD_STATUSES,
   LEAD_QUALIFICATIONS,
+  LEAD_LOST_REASONS,
   PROJECT_STAGES,
   TASK_STATUSES,
   PROPOSAL_STATUSES,
@@ -21,6 +22,8 @@ export const leadQualificationEnum = pgEnum(
   "lead_qualification",
   LEAD_QUALIFICATIONS,
 );
+
+export const leadLostReasonEnum = pgEnum("lead_lost_reason", LEAD_LOST_REASONS);
 
 export const proposalStatusEnum = pgEnum("proposal_status", PROPOSAL_STATUSES);
 

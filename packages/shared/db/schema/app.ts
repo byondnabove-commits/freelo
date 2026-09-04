@@ -12,11 +12,10 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 
-
-
 import {
   leadStatusEnum,
   leadQualificationEnum,
+  leadLostReasonEnum, // ← add this
   proposalStatusEnum,
   projectStageEnum,
   taskStatusEnum,
@@ -54,6 +53,8 @@ export const leads = pgTable(
     notes: text("notes"),
     // Nullable: a lead can be created manually (no public form involved),
     // not only via a form submission.
+    lostReason: leadLostReasonEnum("lost_reason"), // ← add this
+
     submissionId: uuid("submission_id").references(() => formSubmissions.id, {
       onDelete: "set null",
     }),
@@ -105,7 +106,7 @@ export const projects = pgTable(
       }),
     name: text("name").notNull(),
     description: text("description"),
-    stage: projectStageEnum("stage").notNull().default("inquiry"),
+    stage: projectStageEnum("stage").notNull().default("planning"),
     deadline: date("deadline"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },

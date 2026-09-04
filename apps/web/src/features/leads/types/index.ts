@@ -1,6 +1,7 @@
 import type {
   LeadStatus,
   LeadQualification,
+  LeadLostReason,
 } from "@freelo/shared/db/schema/values.js";
 
 export type Lead = {
@@ -18,11 +19,11 @@ export type Lead = {
   notes: string | null;
   submissionId: string | null;
   phone: string | null;
+  lostReason: LeadLostReason | null;
   createdAt: string;
   // Real conversion signal — null until a client row actually exists for
-  // this lead. Only present on the GET /:leadId response (LeadService.getById),
-  // not on list responses.
+  // this lead. Only present on the GET /:leadId response.
   convertedClient: { id: string; name: string } | null;
 };
 
-export type { LeadStatus, LeadQualification };
+export type { LeadStatus, LeadQualification, LeadLostReason };

@@ -32,12 +32,24 @@ export const LEAD_QUALIFICATIONS = ["unqualified", "qualified"] as const;
 
 export type LeadQualification = (typeof LEAD_QUALIFICATIONS)[number];
 
+// Required whenever a lead's status is set to "lost" — see
+// LeadService.markAsLost. Never set on any other status.
+export const LEAD_LOST_REASONS = [
+  "budget_too_low",
+  "chose_other_freelancer",
+  "timeline_mismatch",
+  "went_unresponsive",
+  "not_right_fit",
+  "other",
+] as const;
+
+export type LeadLostReason = (typeof LEAD_LOST_REASONS)[number];
+
 // ================================
 // Projects
 // ================================
 
 export const PROJECT_STAGES = [
-  "inquiry",
   "planning",
   "active",
   "review",
