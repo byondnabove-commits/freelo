@@ -17,10 +17,11 @@ clientRoutes.get(
   "/",
   zValidator("query", ListClientsQuerySchema),
   async (c) => {
-    const { limit, offset } = c.req.valid("query");
+    const { limit, offset, includeArchived } = c.req.valid("query");
     const clients = await clientService.list(c.get("organizationId"), {
       limit,
       offset,
+      includeArchived,
     });
     return c.json({ data: clients });
   },
@@ -47,8 +48,22 @@ clientRoutes.patch(
   },
 );
 
-// add alongside existing routes
+// Response shape: { data: { action: "deleted" } } or
+// { data: { action: "archived", projectCount } } — the frontend needs to
+// branch on `action` to show the right toast/UI, since this one endpoint
+// now covers both outcomes.
 clientRoutes.delete("/:clientId", async (c) => {
-  await clientService.delete(c.get("organizationId"), c.req.param("clientId"));
-  return c.json({ success: true });
+  const result = await clientService.delete(
+    c.get("organizationId"),
+    c.req.param("clientId"),
+  );
+  return c.json({ data: result });
+});
+
+clientRoutes.post("/:clientId/restore", async (c) => {
+  const client = await clientService.restore(
+    c.get("organizationId"),
+    c.req.param("clientId"),
+  );
+  return c.json({ data: client });
 });

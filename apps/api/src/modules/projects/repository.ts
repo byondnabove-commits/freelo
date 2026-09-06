@@ -1,4 +1,4 @@
-import { and, eq, asc } from "drizzle-orm";
+import { and, eq, asc, count } from "drizzle-orm";
 import type { InferInsertModel } from "drizzle-orm";
 
 import { db } from "@/db";
@@ -9,8 +9,6 @@ type NewProject = InferInsertModel<typeof projects>;
 type ProjectUpdate = Partial<Omit<NewProject, "id" | "organizationId" | "createdAt">>;
 
 export class ProjectRepository {
-  // tx added: called from inside ClientService.createFromLead's transaction
-  // when a project is created as part of lead conversion.
   async create(data: NewProject, tx: DbOrTx = db) {
     const [project] = await tx.insert(projects).values(data).returning();
     return project;
@@ -27,6 +25,18 @@ export class ProjectRepository {
       where: eq(projects.organizationId, organizationId),
       orderBy: asc(projects.createdAt),
     });
+  }
+
+  // Used by ClientService.delete to decide hard-delete vs. archive — a
+  // lightweight count, not the full row list (that's a separate concern,
+  // for whenever the client detail page's "Projects" section gets built).
+  async countByClientId(clientId: string) {
+    const [result] = await db
+      .select({ count: count() })
+      .from(projects)
+      .where(eq(projects.clientId, clientId));
+
+    return result.count;
   }
 
   async updateStage(id: string, stage: NewProject["stage"]) {
