@@ -84,6 +84,7 @@ export const clients = pgTable(
       .notNull()
       .unique()
       .$defaultFn(() => crypto.randomUUID()),
+    archivedAt: timestamp("archived_at"),
     notes: text("notes"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
@@ -499,6 +500,7 @@ export const formSubmissions = pgTable(
       }),
 
     answers: jsonb("answers").notNull().default({}),
+    idempotencyKey: text("idempotency_key").unique(),
 
     submittedAt: timestamp("submitted_at").notNull().defaultNow(),
 

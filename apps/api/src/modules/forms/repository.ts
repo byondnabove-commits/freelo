@@ -13,9 +13,7 @@ type NewForm = InferInsertModel<typeof forms>;
 type NewFormField = InferInsertModel<typeof formFields>;
 type NewSubmission = InferInsertModel<typeof formSubmissions>;
 
-type FormUpdate = Partial<
-  Omit<NewForm, "id" | "organizationId" | "createdAt">
->;
+type FormUpdate = Partial<Omit<NewForm, "id" | "organizationId" | "createdAt">>;
 
 type FormFieldUpdate = Partial<
   Omit<NewFormField, "id" | "formId" | "createdAt">
@@ -33,10 +31,7 @@ export class FormRepository {
 
   async findById(organizationId: string, id: string) {
     return db.query.forms.findFirst({
-      where: and(
-        eq(forms.id, id),
-        eq(forms.organizationId, organizationId),
-      ),
+      where: and(eq(forms.id, id), eq(forms.organizationId, organizationId)),
     });
   }
 
@@ -76,10 +71,7 @@ export class FormRepository {
   }
 
   async create(data: NewForm) {
-    const [form] = await db
-      .insert(forms)
-      .values(data)
-      .returning();
+    const [form] = await db.insert(forms).values(data).returning();
 
     return form;
   }
@@ -95,12 +87,9 @@ export class FormRepository {
   }
 
   async delete(id: string) {
-    const deleted = await db
-      .delete(forms)
-      .where(eq(forms.id, id))
-      .returning({
-        id: forms.id,
-      });
+    const deleted = await db.delete(forms).where(eq(forms.id, id)).returning({
+      id: forms.id,
+    });
 
     return deleted.length > 0;
   }
@@ -118,26 +107,17 @@ export class FormRepository {
 
   async findFieldById(formId: string, fieldId: string) {
     return db.query.formFields.findFirst({
-      where: and(
-        eq(formFields.id, fieldId),
-        eq(formFields.formId, formId),
-      ),
+      where: and(eq(formFields.id, fieldId), eq(formFields.formId, formId)),
     });
   }
 
   async createField(data: NewFormField) {
-    const [field] = await db
-      .insert(formFields)
-      .values(data)
-      .returning();
+    const [field] = await db.insert(formFields).values(data).returning();
 
     return field;
   }
 
-  async updateField(
-    id: string,
-    data: FormFieldUpdate,
-  ) {
+  async updateField(id: string, data: FormFieldUpdate) {
     const [field] = await db
       .update(formFields)
       .set(data)
@@ -147,10 +127,7 @@ export class FormRepository {
     return field;
   }
 
-  async updateFieldPosition(
-    id: string,
-    position: number,
-  ) {
+  async updateFieldPosition(id: string, position: number) {
     const [field] = await db
       .update(formFields)
       .set({ position })
@@ -184,10 +161,15 @@ export class FormRepository {
     return submission;
   }
 
-  async findSubmission(
-    organizationId: string,
-    submissionId: string,
-  ) {
+  // Fast-path idempotency check — is this exact submission attempt (by key)
+  // one we've already processed? Checked before doing any real work.
+  async findSubmissionByIdempotencyKey(idempotencyKey: string) {
+    return db.query.formSubmissions.findFirst({
+      where: eq(formSubmissions.idempotencyKey, idempotencyKey),
+    });
+  }
+
+  async findSubmission(organizationId: string, submissionId: string) {
     return db.query.formSubmissions.findFirst({
       where: and(
         eq(formSubmissions.id, submissionId),
@@ -212,10 +194,7 @@ export class FormRepository {
     });
   }
 
-  async countSubmissions(
-    organizationId: string,
-    formId: string,
-  ) {
+  async countSubmissions(organizationId: string, formId: string) {
     const [result] = await db
       .select({
         count: count(),
@@ -231,10 +210,7 @@ export class FormRepository {
     return result.count;
   }
 
-  async hasSubmitted(
-    formId: string,
-    ipAddress: string,
-  ) {
+  async hasSubmitted(formId: string, ipAddress: string) {
     const [row] = await db
       .select({
         id: formSubmissions.id,

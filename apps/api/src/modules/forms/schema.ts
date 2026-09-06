@@ -1,9 +1,6 @@
 import { z } from "zod";
 
-import {
-  FIELD_TYPES,
-  FORM_STATES,
-} from "@freelo/shared/db/schema/values.js";
+import { FIELD_TYPES, FORM_STATES } from "@freelo/shared/db/schema/values.js";
 
 import {
   MAX_FORM_DESCRIPTION_LENGTH,
@@ -19,17 +16,9 @@ import {
 /* -------------------------------------------------------------------------- */
 
 export const UpdateFormSchema = z.object({
-  title: z
-    .string()
-    .trim()
-    .min(1)
-    .max(MAX_FORM_TITLE_LENGTH),
+  title: z.string().trim().min(1).max(MAX_FORM_TITLE_LENGTH),
 
-  description: z
-    .string()
-    .trim()
-    .max(MAX_FORM_DESCRIPTION_LENGTH)
-    .nullable(),
+  description: z.string().trim().max(MAX_FORM_DESCRIPTION_LENGTH).nullable(),
 
   successMessage: z.string().trim().min(1).max(500),
 
@@ -65,11 +54,7 @@ export const CreateFieldSchema = z.object({
 
   type: z.enum(FIELD_TYPES),
 
-  label: z
-    .string()
-    .trim()
-    .min(1)
-    .max(MAX_FIELD_LABEL_LENGTH),
+  label: z.string().trim().min(1).max(MAX_FIELD_LABEL_LENGTH),
 
   placeholder: z
     .string()
@@ -120,6 +105,10 @@ export const PublishFormSchema = z.object({
 
 export const SubmitFormSchema = z.object({
   answers: z.record(z.string(), z.unknown()),
+  // Generated once by the frontend when the form loads, sent with every
+  // submit attempt for that page load — including retries/double-clicks.
+  // See FormService.submit for how this is enforced.
+  idempotencyKey: z.uuid(),
 });
 
 export type UpdateFormInput = z.infer<typeof UpdateFormSchema>;

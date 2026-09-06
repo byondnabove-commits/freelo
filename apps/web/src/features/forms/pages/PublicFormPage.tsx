@@ -13,6 +13,13 @@ export default function PublicFormPage() {
   const { mutate, isPending: isSubmitting } = useSubmitPublicForm(slug!);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // Generated once when this page mounts, not regenerated on re-render —
+  // the lazy initializer form of useState guarantees it only runs once.
+  // Every submit attempt from this page load (including a double-click or
+  // a retried request) sends the same key, which is what makes the
+  // backend's idempotency check actually work.
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
+
   if (isPending) {
     return (
       <PageShell>
@@ -54,9 +61,10 @@ export default function PublicFormPage() {
   }
 
   function handleSubmit(answers: FormAnswers) {
-    mutate(answers, {
-      onSuccess: (res) => setSuccessMessage(res.data.successMessage),
-    });
+    mutate(
+      { answers, idempotencyKey },
+      { onSuccess: (res) => setSuccessMessage(res.data.successMessage) },
+    );
   }
 
   return (

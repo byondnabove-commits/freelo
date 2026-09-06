@@ -19,6 +19,19 @@ import type {
   SubmitFormInput,
 } from "./schema";
 
+// postgres.js (and most pg drivers) surface a unique-violation as an error
+// object with this Postgres error code — 23505. Narrow, defensive check;
+// doesn't try to match on constraint name since the only unique constraint
+// this specific insert could hit is idempotencyKey.
+function isUniqueViolation(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    (err as { code?: string }).code === "23505"
+  );
+}
+
 export class FormService {
   /* -------------------------------------------------------------------------- */
   /*                                    Forms                                   */
@@ -214,6 +227,24 @@ export class FormService {
       throw new FormNotFoundError();
     }
 
+    // Fast-path idempotency check. This is a genuinely different concept
+    // from the allowMultipleSubmissions/IP check below: this answers "have
+    // I already processed this EXACT request" (double-click, retry), not
+    // "has this person submitted before" (a business rule). A brand new
+    // submission always gets a brand new key, so this never blocks a
+    // legitimate new inquiry from the same person.
+    const existingByKey = await formRepository.findSubmissionByIdempotencyKey(
+      data.idempotencyKey,
+    );
+
+    if (existingByKey) {
+      return {
+        id: existingByKey.id,
+        submittedAt: existingByKey.submittedAt,
+        successMessage: form.successMessage,
+      };
+    }
+
     if (!form.allowMultipleSubmissions && metadata.ipAddress) {
       const alreadySubmitted = await formRepository.hasSubmitted(
         form.id,
@@ -246,14 +277,37 @@ export class FormService {
       }
     }
 
-    const submission = await formRepository.createSubmission({
-      organizationId: form.organizationId,
-      formId: form.id,
-      answers: data.answers,
-      ipAddress: metadata.ipAddress ?? null,
-      userAgent: metadata.userAgent ?? null,
-      referrer: metadata.referrer ?? null,
-    });
+    let submission;
+
+    try {
+      submission = await formRepository.createSubmission({
+        organizationId: form.organizationId,
+        formId: form.id,
+        answers: data.answers,
+        idempotencyKey: data.idempotencyKey,
+        ipAddress: metadata.ipAddress ?? null,
+        userAgent: metadata.userAgent ?? null,
+        referrer: metadata.referrer ?? null,
+      });
+    } catch (err) {
+      // Rare race: two requests with the same key both passed the check
+      // above before either committed. Whichever loses the insert here
+      // just looks up what the winner created and returns that instead of
+      // surfacing a raw database error to the client.
+      if (isUniqueViolation(err)) {
+        const winning = await formRepository.findSubmissionByIdempotencyKey(
+          data.idempotencyKey,
+        );
+        if (winning) {
+          return {
+            id: winning.id,
+            submittedAt: winning.submittedAt,
+            successMessage: form.successMessage,
+          };
+        }
+      }
+      throw err;
+    }
 
     // Direct call into the leads module — no event indirection. This is a
     // straightforward "one write depends on another write" case; leads

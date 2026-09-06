@@ -8,6 +8,13 @@ type SubmitResponse = {
   successMessage: string;
 };
 
-export async function submitPublicForm(slug: string, answers: FormAnswers) {
-  return api.post<SubmitResponse>(`/api/forms/public/${slug}/submit`, { answers });
+export async function submitPublicForm(
+  slug: string,
+  answers: FormAnswers,
+  idempotencyKey: string,
+) {
+  return api.post<SubmitResponse>(`/api/forms/public/${slug}/submit`, {
+    answers,
+    idempotencyKey,
+  });
 }
