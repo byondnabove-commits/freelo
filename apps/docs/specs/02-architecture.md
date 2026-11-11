@@ -6,6 +6,39 @@
 
 ---
 
+## 0. Architectural style: modular monolith + "DDD-lite"
+
+**Decision (2026-11-11):** one deployable application and one PostgreSQL database, split into business modules with strict layers. Domain-Driven Design ideas are used only where they pay off. Not microservices, not an event bus, not plain CRUD everywhere.
+
+### 0.1 What we use
+| Principle | In practice |
+|---|---|
+| **Modular monolith** | `apps/api` (HTTP) and `apps/worker` (jobs) share the same code packages and the same database. Deployed together. |
+| **Modules by business area** | `auth`, `workspace`, `services`, `clients`, `leads`, `forms`, `devis`, `contracts`, `factures`, `projects`, `activity`... A module owns its tables and is called **only through its service**, never through another module's repository. |
+| **Layers in every module** | `routes` (HTTP only) → `service` (rules, transactions) → `repository` (SQL only, always scoped by `organizationId`). Simple CRUD modules keep thin services. |
+| **DDD-lite** | A shared glossary (`00-product-frame.md` §7). Pure business rules in `@freelo/domain` (money, TVA, schedules, numbering, permissions, plan limits, `missingFor`). Consistency boundaries where invariants matter: a devis with its lines, options and acceptance, and a facture with its lines and payments, always change in one transaction. |
+| **Explicit flow** | Modules call each other directly through services. A status change never triggers hidden side effects (`00-product-frame.md` §8, principle 6). |
+| **Async only for slow side effects** | Emails, PDF and AI run as **jobs** in the worker (pg-boss, stored in Postgres). History goes to `activity_events`. Both are written **in the same transaction** as the change, so nothing fires for a rolled-back write. |
+
+### 0.2 What we don't use, and why
+| Option | Why not |
+|---|---|
+| Microservices | One developer, one server. Money operations (issuing a facture with its number) need a single database transaction. Network calls and distributed failures would add cost with no benefit. |
+| Event bus / event-driven core | Implicit reactions between modules are hard to follow and were the root of the old "lead won → auto-create project" bug. |
+| Full DDD (aggregates everywhere, domain events, CQRS, event sourcing) | Too much ceremony for the size of the product and team. |
+| Plain CRUD everywhere | Money, devis, numbering and acceptance rules would end up scattered in routes and UI. |
+
+### 0.3 Growth path (no rewrite needed)
+1. Bigger server (vertical scaling).
+2. More worker containers; heavy queues (PDF) get their own worker. pg-boss uses `SKIP LOCKED`, so workers never process the same job twice.
+3. Database on its own server, then managed Postgres with replicas.
+4. Several API instances behind Caddy. Sessions are already in the database and files in object storage. The in-memory rate limiter must move to a shared store first (marked `shortcut:` in the code).
+5. A module that truly needs independent scaling can be extracted along its existing boundary. The queue can be swapped (Redis/BullMQ or a cloud queue) behind the job contracts in `@freelo/contracts/jobs`.
+
+At the M4 milestone (≈ 5,000 workspaces, ≈ 100k jobs/day ≈ 1 job/s, a rough estimate), steps 1–2 are expected to be enough. PDF rendering and database size are the first limits, not the architecture.
+
+---
+
 ## 1. Stack (kept)
 
 | Layer | Choice |
