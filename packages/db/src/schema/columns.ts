@@ -17,11 +17,14 @@ export const organizationId = () =>
     .notNull()
     .references(() => organization.id, { onDelete: "cascade" });
 
-export const createdAt = () =>
-  timestamp({ withTimezone: true }).notNull().defaultNow();
+// Millisecond precision matches JS Date, so a timestamp read back into a
+// cursor compares equal to the stored value (microseconds would be lost).
+const ms = { withTimezone: true, precision: 3 } as const;
+
+export const createdAt = () => timestamp(ms).notNull().defaultNow();
 
 export const updatedAt = () =>
-  timestamp({ withTimezone: true })
+  timestamp(ms)
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date());

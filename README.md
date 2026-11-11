@@ -8,14 +8,14 @@ Specs live in [`apps/docs/specs/`](apps/docs/specs/). Start with `00-product-fra
 
 - Node 22 (`.nvmrc`)
 - pnpm 10
-- Docker Desktop (Postgres, Mailpit, MinIO for local development)
+- Docker Desktop with WSL 2 (Postgres and Mailpit for local development)
 
 ## First run
 
 ```bash
 pnpm install
 cp .env.example .env
-pnpm dev:services        # Postgres :5432, Mailpit :8025, MinIO :9001
+pnpm dev:services        # Postgres :5432, Mailpit :8025
 pnpm db:migrate
 pnpm dev                 # api :3001, worker, web :5173
 ```
