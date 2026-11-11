@@ -1,21 +1,6 @@
 {
-  "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
-    "types": ["node"],
-
-    "paths": {
-      "@/*": ["./src/*"],
-    }
-  },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+  "extends": "@freelo/config/tsconfig.base.json",
+  // No path aliases: the web app imports AppType from these sources, and an
+  // alias like "@/..." would resolve against the web app's own src.
+  "include": ["src", "vitest.config.ts"]
 }

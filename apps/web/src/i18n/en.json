@@ -1,0 +1,11 @@
+{
+  "app": {
+    "tagline": "Your freelance back office, from inquiry to payment.",
+    "status": {
+      "checking": "Checking the API…",
+      "ok": "API and database are up",
+      "down": "API unreachable"
+    },
+    "language": "Français"
+  }
+}

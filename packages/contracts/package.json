@@ -1,0 +1,21 @@
+{
+  "name": "@freelo/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./activity": "./src/activity.ts",
+    "./errors": "./src/errors.ts",
+    "./pagination": "./src/pagination.ts",
+    "./jobs": "./src/jobs.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@freelo/config": "workspace:*"
+  }
+}

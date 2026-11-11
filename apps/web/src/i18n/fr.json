@@ -1,0 +1,11 @@
+{
+  "app": {
+    "tagline": "Votre back-office freelance, de la demande au paiement.",
+    "status": {
+      "checking": "Vérification de l'API…",
+      "ok": "API et base de données opérationnelles",
+      "down": "API injoignable"
+    },
+    "language": "English"
+  }
+}
