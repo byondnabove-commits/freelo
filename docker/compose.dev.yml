@@ -1,0 +1,28 @@
+# Local development services. Start with `pnpm dev:services`.
+# shortcut: no local S3 yet (MinIO images left Docker Hub); pick a dev object store in S2, when the first upload lands.
+name: freelo-dev
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: freelo
+      POSTGRES_PASSWORD: freelo
+      POSTGRES_DB: freelo
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Creates the separate test database on first start.
+      - ./init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+
+  # Catches every outgoing email. UI: http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+
+volumes:
+  pgdata:

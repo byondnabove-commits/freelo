@@ -1,0 +1,19 @@
+{
+  "name": "@freelo/templates",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./email": "./src/email/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@freelo/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@freelo/config": "workspace:*"
+  }
+}

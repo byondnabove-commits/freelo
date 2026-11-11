@@ -1,90 +1,126 @@
+import { LOCALES, PASSWORD_MAX, PASSWORD_MIN, type Locale } from "@freelo/contracts/auth";
+import { schema } from "@freelo/db";
+import { passwordChanged, resetPassword, verifyEmail } from "@freelo/templates/email";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { organization } from "better-auth/plugins";
+import { haveIBeenPwned, organization } from "better-auth/plugins";
+
 import { db } from "./db";
-import { sendEmail } from "./services/email";
-import "dotenv/config";
+import { env } from "./env";
+import { jobs } from "./jobs";
 
+const localeOf = (user: object): Locale =>
+  LOCALES.includes((user as { locale?: Locale }).locale as Locale) ? (user as { locale: Locale }).locale : "en";
+
+const isTest = env.NODE_ENV === "test";
+
+// Better Auth owns sign-up, sign-in, sessions, verification and password reset (03-s1).
+// Workspaces, members and invitations go through FreeLo's own workspace module, so the
+// plugin's mutating endpoints are disabled below: one path, with our rules and activity log.
 export const auth = betterAuth({
-  secret: process.env.BETTER_AUTH_SECRET!,
-  baseURL: process.env.BETTER_AUTH_URL!,
-  trustedOrigins: [process.env.CLIENT_URL!],
-
-  socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-    },
-  },
-
+  secret: env.BETTER_AUTH_SECRET,
+  baseURL: env.BETTER_AUTH_URL,
+  basePath: "/api/auth",
+  trustedOrigins: [env.WEB_URL],
   database: drizzleAdapter(db, {
     provider: "pg",
+    schema: {
+      user: schema.user,
+      session: schema.session,
+      account: schema.account,
+      verification: schema.verification,
+      organization: schema.organization,
+      member: schema.member,
+      invitation: schema.invitation,
+    },
   }),
+
+  user: {
+    additionalFields: {
+      locale: { type: "string", required: false, defaultValue: "en", input: true },
+    },
+  },
 
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
-    minPasswordLength: 8,
-
+    minPasswordLength: PASSWORD_MIN,
+    maxPasswordLength: PASSWORD_MAX,
+    resetPasswordTokenExpiresIn: 60 * 60,
+    revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
-      await sendEmail({
-        to: user.email,
-        subject: "Reset your FreeLo password",
-        html: `
-        <h2>Reset your password</h2>
-        <p>Click the button below:</p>
-
-        <a href="${url}">
-          Reset Password
-        </a>
-
-        <p>If you didn't request this, ignore this email.</p>
-      `,
-      });
+      const email = resetPassword({ locale: localeOf(user), name: user.name, url });
+      await jobs.enqueueEmail({ to: user.email, ...email });
+    },
+    onPasswordReset: async ({ user }) => {
+      const email = passwordChanged({ locale: localeOf(user), name: user.name });
+      await jobs.enqueueEmail({ to: user.email, ...email });
     },
   },
 
   emailVerification: {
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
-
+    expiresIn: 60 * 60 * 24,
     sendVerificationEmail: async ({ user, url }) => {
-      
-      await sendEmail({
-        to: user.email,
-        subject: "Verify your FreeLo account",
-        html: `
-          <h2>Welcome to FreeLo</h2>
-          <p>Click below to verify your email:</p>
-          <a href="${url}" style="
-            background:#1a6b3c;
-            color:white;
-            padding:12px 24px;
-            border-radius:8px;
-            text-decoration:none;
-            display:inline-block;
-          ">Verify my email</a>
-          <p>Link expires in 24 hours.</p>
-        `,
-      });
+      const email = verifyEmail({ locale: localeOf(user), name: user.name, url });
+      await jobs.enqueueEmail({ to: user.email, ...email });
     },
   },
 
-  plugins: [
-    organization({
-      allowUserToCreateOrganization: true,
-      creatorRole: "owner",
-    }),
+  socialProviders:
+    env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
+      ? { google: { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET } }
+      : {},
+  // Google sign-in links to an existing verified account with the same email.
+  account: { accountLinking: { enabled: true, trustedProviders: ["google"] } },
+
+  // 7 days, renewed after 1 day of use. No cookie cache: switching workspace must apply at once.
+  session: { expiresIn: 60 * 60 * 24 * 7, updateAge: 60 * 60 * 24 },
+
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => ({ data: { ...user, email: user.email.trim().toLowerCase(), locale: localeOf(user) } }),
+      },
+    },
+  },
+
+  // Caddy sets X-Forwarded-For in production. Limits from 03-s1 §8.
+  // shortcut: in-memory store, correct only with one API process; use the database store before scaling out.
+  advanced: { ipAddress: { ipAddressHeaders: ["x-forwarded-for"] } },
+  rateLimit: {
+    enabled: true,
+    window: 60,
+    max: 100,
+    customRules: {
+      "/sign-in/email": { window: 60, max: 10 },
+      "/sign-up/email": { window: 60, max: 5 },
+      "/request-password-reset": { window: 60, max: 3 },
+      "/send-verification-email": { window: 60, max: 1 },
+    },
+  },
+
+  disabledPaths: [
+    "/organization/create",
+    "/organization/update",
+    "/organization/delete",
+    "/organization/invite-member",
+    "/organization/cancel-invitation",
+    "/organization/accept-invitation",
+    "/organization/reject-invitation",
+    "/organization/remove-member",
+    "/organization/update-member-role",
+    "/organization/leave",
+    "/organization/set-active",
   ],
 
-  session: {
-    expiresIn: 60 * 60 * 24 * 7,
-    updateAge: 60 * 60 * 24,
-    cookieCache: {
-      enabled: true,
-      maxAge: 60 * 5,
-    },
-  },
+  plugins: [
+    // Kept for its schema and the session's activeOrganizationId field.
+    organization({ allowUserToCreateOrganization: false, creatorRole: "owner" }),
+    // shortcut: skipped in tests to avoid a network call; covered manually.
+    ...(isTest ? [] : [haveIBeenPwned()]),
+  ],
 });
 
-export type Auth = typeof auth;
+export type AuthSession = typeof auth.$Infer.Session;
