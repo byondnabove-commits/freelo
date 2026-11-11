@@ -11,7 +11,7 @@
 
 1. **Never ask twice.** Anything known from sign-up (name, email, language) or from the market (Algeria) is not asked.
 2. **Ask only what the next step needs.** Legal identity and payment details are asked **when the user first issues a devis or a facture**, not on day one.
-3. **Every step saves immediately.** Refresh, crash or device switch resumes at the same step.
+3. **Every step saves immediately.** Refresh, crash or device switch resumes at the same step (§3.1).
 4. **Optional means skippable.** Only the business name is required.
 
 ---
@@ -40,6 +40,22 @@ Step 1 — Your business  →  Step 2 — What you sell  →  Step 3 — How you
 ```
 
 A left stepper shows the 3 steps (the Figma layout is kept). "Back" never loses data.
+
+### 3.1 Leaving halfway and coming back
+
+| Where the user left | On return (any device) |
+|---|---|
+| Before confirming step 1 | Step 1 (nothing saved server-side yet) |
+| After confirming step 1 or 2 | The next unconfirmed step, with earlier answers pre-filled |
+| On Ready | Ready, then the dashboard |
+
+- **Confirmed steps** live in the database (`onboarding_step` plus the saved answers), so they resume on any device.
+- **Unconfirmed edits** inside the current step (typed but not yet "Continue") are kept as a **browser draft** in `localStorage`. The key is `freelo:onboarding-draft:<userId>:<step>`, and the draft is written on change, debounced 500 ms.
+  - On return to the same step **on the same browser**, the draft is restored over the saved answers, with a small "Restored your unsaved changes" note and an "Undo" link back to the saved version.
+  - The draft is deleted when the step is confirmed, when onboarding completes, and on sign-out.
+  - It holds only the step's form values (business name, services, team, budget, invitation emails). Never the logo file, never tokens.
+  - If storage is unavailable (private mode, blocked), the form works normally without drafts. Every read and write is wrapped in try/catch.
+- Every app page redirects an owner whose onboarding isn't complete back to `/onboarding`, at the resume step.
 
 ---
 
@@ -186,7 +202,7 @@ Guard: business routes (S3+) require `onboarding_completed_at` for **owners** of
 ## 12. Acceptance criteria
 
 1. Sign-up → verify → `/onboarding` → step 1 creates the workspace, profile and owner in one transaction.
-2. Steps 2 and 3 can be skipped. Refreshing at any step resumes there with the answers kept.
+2. Steps 2 and 3 can be skipped. Refreshing at any step resumes there with the answers kept. Unconfirmed edits come back on the same browser, the draft is cleared after "Continue" and sign-out, and the form still works with storage blocked.
 3. Services from step 2 appear in the catalog with prices in centimes, shown as DA.
 4. An invited member never sees onboarding.
 5. A logo over 2 MB, an SVG, or a file renamed to `.png` that isn't a PNG is rejected with a clear error.
