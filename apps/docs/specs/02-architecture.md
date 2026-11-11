@@ -196,7 +196,7 @@ The API never waits on email, PDF or AI. The web app polls or refetches the job'
 
 ## 14. i18n
 
-- Languages: `fr` (default) and `en`. The UI language is per user, the document language per document (defaulting to the workspace setting).
+- Languages: `en` (default) and `fr`. The UI language is per user, the document language per document (defaulting to the workspace setting).
 - Keys organized by feature (`devis.status.accepted`). No hard-coded UI text, enforced by a lint rule.
 - Dates, numbers and money formatted with `Intl` in the selected locale (`1 234 500,00 DA` in FR).
 - API error codes map to translated messages on the client.

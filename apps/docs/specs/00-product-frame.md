@@ -33,7 +33,7 @@
 | M3 | Currency | **DZD.** Amounts stored in integer centimes plus a currency code, so other currencies can be added later without a migration. |
 | M4 | Client payments | **Offline, recorded in FreeLo.** Documents show the freelancer's payment instructions (CCP/RIP, BaridiMob, bank RIB, cash, cheque). The freelancer records each payment received. Online payment (CIB/Edahabia through a local gateway such as Chargily or SATIM) is a later option, not v1. |
 | M5 | Signatures | **No e-signature in the app** (legal caution). **Contracts** are generated as PDF, printed, signed and stamped in person, and the signed scan can be uploaded. **Devis** can also be accepted online ("bon pour accord"): checkbox, typed full name, email one-time code, then an immutable acceptance record (name, contact, timestamp, IP, browser, hash of the exact version) and a locked PDF with an acceptance footer. Per devis, the freelancer chooses online, paper, or both. Have a lawyer confirm the evidentiary value before launch. |
-| M6 | Languages | **French and English** for the app and documents. Documents default to French. Arabic (right-to-left) later. |
+| M6 | Languages | **French and English** for the app and documents. English is the default for the app and documents; French is available everywhere. Arabic (right-to-left) later. |
 | M7 | Free tier | **Reverse trial:** every new workspace gets full paid features for 30 days, then drops to a limited forever-free plan. Paid plans are **prepaid** (monthly or yearly) in DZD, with no automatic renewal. |
 | M8 | Project start | **Always an explicit action by the freelancer.** No status change or setting ever creates a client or a project on its own (§5). |
 
