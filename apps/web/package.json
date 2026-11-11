@@ -12,7 +12,10 @@
   },
   "dependencies": {
     "@freelo/api": "workspace:*",
+    "@freelo/contracts": "workspace:*",
+    "@freelo/domain": "workspace:*",
     "@tanstack/react-query": "^5.107.1",
+    "better-auth": "^1.7.21",
     "hono": "^4.13.18",
     "i18next": "^27.1.1",
     "react": "^19.3.1",

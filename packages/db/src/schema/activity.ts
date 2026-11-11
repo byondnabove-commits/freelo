@@ -1,4 +1,4 @@
-import { index, jsonb, pgEnum, pgTable, text, uuid } from "drizzle-orm/pg-core";
+import { index, jsonb, pgEnum, pgTable, text } from "drizzle-orm/pg-core";
 
 import { ACTOR_TYPES } from "@freelo/contracts/activity";
 import { createdAt, id, organizationId } from "./columns";
@@ -15,7 +15,8 @@ export const activityEvents = pgTable(
     // member: user id · client: contact id · system: null
     actorId: text(),
     entityType: text().notNull(),
-    entityId: uuid().notNull(),
+    // text: Better Auth ids (workspaces, members) are not UUIDs.
+    entityId: text().notNull(),
     type: text().notNull(),
     data: jsonb().$type<Record<string, unknown>>().notNull().default({}),
     createdAt: createdAt(),

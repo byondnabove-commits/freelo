@@ -1,8 +1,10 @@
 // Better Auth tables (email/password, Google, organization plugin).
 // Ids are text because Better Auth generates them. Column names follow the
 // snake_case casing set in drizzle.config.ts.
-import { relations } from "drizzle-orm";
-import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
+import { boolean, check, index, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+
+import { LOCALES, ROLES } from "@freelo/contracts/auth";
 
 const tz = { withTimezone: true } as const;
 
@@ -12,6 +14,8 @@ export const user = pgTable("user", {
   email: text().notNull().unique(),
   emailVerified: boolean().notNull().default(false),
   image: text(),
+  // UI and email language (03-s1 §7). Declared to Better Auth as an additional field.
+  locale: text({ enum: LOCALES }).notNull().default("en"),
   createdAt: timestamp(tz).notNull().defaultNow(),
   updatedAt: timestamp(tz)
     .notNull()
@@ -104,8 +108,10 @@ export const member = pgTable(
     createdAt: timestamp(tz).notNull().defaultNow(),
   },
   (t) => [
-    index("member_organization_id_idx").on(t.organizationId),
+    uniqueIndex("member_organization_user_uidx").on(t.organizationId, t.userId),
     index("member_user_id_idx").on(t.userId),
+    // Better Auth's default "admin" role is not used (03-s1 §5).
+    check("member_role_check", sql.raw(`role in (${ROLES.map((r) => `'${r}'`).join(", ")})`)),
   ],
 );
 
@@ -128,6 +134,10 @@ export const invitation = pgTable(
   (t) => [
     index("invitation_organization_id_idx").on(t.organizationId),
     index("invitation_email_idx").on(t.email),
+    // One pending invitation per email per workspace.
+    uniqueIndex("invitation_pending_email_uidx")
+      .on(t.organizationId, sql`lower(${t.email})`)
+      .where(sql`${t.status} = 'pending'`),
   ],
 );
 

@@ -15,10 +15,14 @@
   "dependencies": {
     "@freelo/contracts": "workspace:*",
     "@freelo/db": "workspace:*",
+    "@freelo/domain": "workspace:*",
+    "@freelo/templates": "workspace:*",
     "@hono/node-server": "^2.1.7",
     "@hono/zod-validator": "^0.9.1",
+    "better-auth": "^1.7.21",
     "hono": "^4.13.18",
     "hono-rate-limiter": "^0.5.4",
+    "pg-boss": "^12.38.2",
     "uuid": "^14.0.3",
     "zod": "^4.6.7"
   },

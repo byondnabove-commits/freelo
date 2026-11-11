@@ -12,6 +12,12 @@ const envSchema = z.object({
   DATABASE_URL: z.url(),
   API_PORT: z.coerce.number().int().default(3001),
   WEB_URL: z.url(),
+  BETTER_AUTH_SECRET: z.string().min(32),
+  // The public origin users see. Links in emails point here (03-s1 §6); in dev
+  // Vite proxies /api to this API, so it equals WEB_URL.
+  BETTER_AUTH_URL: z.url(),
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
 });
 
 export const env = envSchema.parse(process.env);

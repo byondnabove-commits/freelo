@@ -225,3 +225,13 @@ New error codes in `@freelo/contracts/errors`: `EMAIL_NOT_VERIFIED`, `ORGANIZATI
 - **templates:** each email renders in FR and EN with no missing keys, and links use `WEB_URL`.
 - **worker:** unchanged (email sender already covered).
 - **web:** i18n key parity (existing). An end-to-end golden path (Playwright) arrives with S2, once onboarding exists.
+
+---
+
+## 14. Implementation notes (as built, 2026-11-11)
+
+- **Invitations and members use FreeLo's own endpoints only.** Acceptance is `POST /api/v1/invitations/:id/accept` instead of Better Auth's endpoint + hook, and the invitation page reads `GET /api/v1/public/invitations/:id`. All of Better Auth's organization mutation endpoints are disabled (`disabledPaths`), so there is one path with our rules and activity events.
+- **Same origin in dev:** Vite proxies `/api` to the API (with `X-Forwarded-For`), so `BETTER_AUTH_URL` is the web URL and every email link points to the web host.
+- **UI primitives:** minimal Tailwind components (`apps/web/src/components/ui.tsx`) instead of the full shadcn set, until the design system is finalized in Figma.
+- **Sign-up consent:** a required "I accept the Terms and the Privacy policy" checkbox (law 18-07). The Terms and Privacy pages themselves are still to write.
+- **Known shortcuts** (marked `shortcut:` in code): invitation emails are enqueued right after commit rather than inside the transaction; rate limiters keep counts in memory (one API process only); the breached-password check is skipped in tests.

@@ -7,5 +7,123 @@
       "down": "API injoignable"
     },
     "language": "English"
+  },
+  "common": {
+    "email": "Email",
+    "password": "Mot de passe",
+    "name": "Nom complet",
+    "continue": "Continuer",
+    "cancel": "Annuler",
+    "or": "ou",
+    "google": "Continuer avec Google",
+    "backToLogin": "Retour à la connexion",
+    "signOut": "Se déconnecter",
+    "loading": "Chargement…"
+  },
+  "auth": {
+    "login": {
+      "title": "Bon retour",
+      "subtitle": "Connectez-vous à votre espace.",
+      "submit": "Se connecter",
+      "forgot": "Mot de passe oublié ?",
+      "noAccount": "Pas encore de compte ?",
+      "signUp": "Créer un compte",
+      "notVerified": "Confirmez d'abord votre email. Nous pouvons renvoyer le lien.",
+      "resend": "Renvoyer le lien",
+      "invalid": "Email ou mot de passe incorrect."
+    },
+    "signup": {
+      "title": "Créez votre compte",
+      "subtitle": "Gratuit pour commencer. Sans carte.",
+      "submit": "Créer mon compte",
+      "hasAccount": "Vous avez déjà un compte ?",
+      "signIn": "Se connecter",
+      "passwordHint": "Au moins 10 caractères.",
+      "consent": "J'accepte les Conditions d'utilisation et la Politique de confidentialité.",
+      "consentRequired": "Veuillez accepter les Conditions et la Politique de confidentialité.",
+      "exists": "Un compte existe déjà avec cet email.",
+      "weakPassword": "Ce mot de passe est trop court ou a fuité dans une violation de données. Choisissez-en un autre."
+    },
+    "verify": {
+      "title": "Vérifiez votre boîte mail",
+      "subtitle": "Nous avons envoyé un lien de confirmation à {{email}}. Cliquez dessus pour activer votre compte.",
+      "resend": "Renvoyer l'email",
+      "resent": "Envoyé. Vérifiez votre boîte de réception et vos spams.",
+      "expired": "Ce lien a expiré ou a déjà été utilisé. Demandez-en un nouveau."
+    },
+    "forgot": {
+      "title": "Réinitialiser votre mot de passe",
+      "subtitle": "Saisissez votre email, nous vous enverrons un lien.",
+      "submit": "Envoyer le lien",
+      "sent": "Si un compte existe pour cet email, un lien de réinitialisation est en route."
+    },
+    "reset": {
+      "title": "Choisissez un nouveau mot de passe",
+      "submit": "Enregistrer le mot de passe",
+      "done": "Mot de passe modifié. Vous pouvez vous connecter.",
+      "invalid": "Ce lien a expiré ou a déjà été utilisé."
+    }
+  },
+  "workspace": {
+    "new": {
+      "title": "Nommez votre activité",
+      "subtitle": "C'est le nom que verront vos clients. Modifiable plus tard.",
+      "label": "Nom de l'activité",
+      "placeholder": "Studio Amine Design",
+      "submit": "Créer mon espace"
+    },
+    "select": {
+      "title": "Choisissez un espace",
+      "create": "Créer un autre espace"
+    },
+    "switcher": "Changer d'espace",
+    "role": {
+      "owner": "Propriétaire",
+      "member": "Membre"
+    }
+  },
+  "invitation": {
+    "title": "Rejoindre {{workspace}}",
+    "subtitle": "{{inviter}} a invité {{email}} à travailler ensemble sur FreeLo.",
+    "accept": "Rejoindre l'espace",
+    "signInFirst": "Connectez-vous ou créez un compte avec {{email}} pour accepter.",
+    "wrongAccount": "Vous êtes connecté en tant que {{current}}, mais cette invitation est pour {{email}}.",
+    "invalid": "Cette invitation a expiré ou a été annulée. Demandez-en une nouvelle à la personne qui vous a invité."
+  },
+  "shell": {
+    "nav": {
+      "today": "Aujourd'hui",
+      "members": "Membres"
+    },
+    "empty": "Votre espace est prêt. Prospects, devis et projets arrivent dans les prochaines versions."
+  },
+  "members": {
+    "title": "Membres",
+    "invite": {
+      "title": "Inviter quelqu'un",
+      "submit": "Envoyer l'invitation",
+      "sent": "Invitation envoyée."
+    },
+    "pending": "Invitations en attente",
+    "expires": "Expire le {{date}}",
+    "resend": "Renvoyer",
+    "cancelInvite": "Annuler",
+    "remove": "Retirer",
+    "leave": "Quitter cet espace",
+    "you": "vous"
+  },
+  "errors": {
+    "VALIDATION_FAILED": "Vérifiez les champs en rouge.",
+    "UNAUTHENTICATED": "Veuillez vous reconnecter.",
+    "FORBIDDEN": "Vous n'avez pas le droit de faire cela.",
+    "NO_ACTIVE_ORGANIZATION": "Créez d'abord un espace.",
+    "ORGANIZATION_SELECTION_REQUIRED": "Choisissez un espace.",
+    "EMAIL_NOT_VERIFIED": "Confirmez d'abord votre email.",
+    "LAST_OWNER": "Un espace doit garder au moins un propriétaire.",
+    "NOT_FOUND": "Introuvable.",
+    "CONFLICT": "Cela existe déjà.",
+    "RATE_LIMITED": "Trop de tentatives. Patientez une minute puis réessayez.",
+    "PLAN_LIMIT_REACHED": "La limite de votre offre est atteinte.",
+    "INTERNAL_ERROR": "Une erreur est survenue. Réessayez."
   }
 }

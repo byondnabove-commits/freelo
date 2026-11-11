@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./money": "./src/money.ts"
+    "./money": "./src/money.ts",
+    "./permissions": "./src/permissions.ts"
   },
   "scripts": {
     "typecheck": "tsc",
@@ -12,5 +13,8 @@
   },
   "devDependencies": {
     "@freelo/config": "workspace:*"
+  },
+  "dependencies": {
+    "@freelo/contracts": "workspace:*"
   }
 }

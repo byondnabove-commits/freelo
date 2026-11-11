@@ -7,5 +7,123 @@
       "down": "API unreachable"
     },
     "language": "Français"
+  },
+  "common": {
+    "email": "Email",
+    "password": "Password",
+    "name": "Full name",
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "or": "or",
+    "google": "Continue with Google",
+    "backToLogin": "Back to sign in",
+    "signOut": "Sign out",
+    "loading": "Loading…"
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to your workspace.",
+      "submit": "Sign in",
+      "forgot": "Forgot your password?",
+      "noAccount": "No account yet?",
+      "signUp": "Create one",
+      "notVerified": "Confirm your email first. We can send the link again.",
+      "resend": "Resend the link",
+      "invalid": "Wrong email or password."
+    },
+    "signup": {
+      "title": "Create your account",
+      "subtitle": "Start free. No card needed.",
+      "submit": "Create my account",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "passwordHint": "At least 10 characters.",
+      "consent": "I accept the Terms and the Privacy policy.",
+      "consentRequired": "Please accept the Terms and the Privacy policy.",
+      "exists": "An account already exists with this email.",
+      "weakPassword": "This password is too short or has appeared in a data breach. Choose another one."
+    },
+    "verify": {
+      "title": "Check your inbox",
+      "subtitle": "We sent a confirmation link to {{email}}. Click it to activate your account.",
+      "resend": "Resend the email",
+      "resent": "Sent. Check your inbox and spam folder.",
+      "expired": "This link has expired or was already used. Request a new one."
+    },
+    "forgot": {
+      "title": "Reset your password",
+      "subtitle": "Enter your email and we'll send you a link.",
+      "submit": "Send the link",
+      "sent": "If an account exists for this email, a reset link is on its way."
+    },
+    "reset": {
+      "title": "Choose a new password",
+      "submit": "Save the new password",
+      "done": "Password changed. You can sign in now.",
+      "invalid": "This link has expired or was already used."
+    }
+  },
+  "workspace": {
+    "new": {
+      "title": "Name your business",
+      "subtitle": "This is the name your clients will see. You can change it later.",
+      "label": "Business name",
+      "placeholder": "Studio Amine Design",
+      "submit": "Create my workspace"
+    },
+    "select": {
+      "title": "Choose a workspace",
+      "create": "Create another workspace"
+    },
+    "switcher": "Switch workspace",
+    "role": {
+      "owner": "Owner",
+      "member": "Member"
+    }
+  },
+  "invitation": {
+    "title": "Join {{workspace}}",
+    "subtitle": "{{inviter}} invited {{email}} to work together on FreeLo.",
+    "accept": "Join the workspace",
+    "signInFirst": "Sign in or create an account with {{email}} to accept.",
+    "wrongAccount": "You are signed in as {{current}}, but this invitation is for {{email}}.",
+    "invalid": "This invitation has expired or was cancelled. Ask the person who invited you for a new one."
+  },
+  "shell": {
+    "nav": {
+      "today": "Today",
+      "members": "Members"
+    },
+    "empty": "Your workspace is ready. Leads, devis and projects arrive in the next releases."
+  },
+  "members": {
+    "title": "Members",
+    "invite": {
+      "title": "Invite someone",
+      "submit": "Send invitation",
+      "sent": "Invitation sent."
+    },
+    "pending": "Pending invitations",
+    "expires": "Expires {{date}}",
+    "resend": "Resend",
+    "cancelInvite": "Cancel",
+    "remove": "Remove",
+    "leave": "Leave this workspace",
+    "you": "you"
+  },
+  "errors": {
+    "VALIDATION_FAILED": "Check the highlighted fields.",
+    "UNAUTHENTICATED": "Please sign in again.",
+    "FORBIDDEN": "You are not allowed to do this.",
+    "NO_ACTIVE_ORGANIZATION": "Create a workspace first.",
+    "ORGANIZATION_SELECTION_REQUIRED": "Choose a workspace.",
+    "EMAIL_NOT_VERIFIED": "Confirm your email first.",
+    "LAST_OWNER": "A workspace needs at least one owner.",
+    "NOT_FOUND": "Not found.",
+    "CONFLICT": "This already exists.",
+    "RATE_LIMITED": "Too many attempts. Wait a minute and try again.",
+    "PLAN_LIMIT_REACHED": "Your plan's limit is reached.",
+    "INTERNAL_ERROR": "Something went wrong. Try again."
   }
 }

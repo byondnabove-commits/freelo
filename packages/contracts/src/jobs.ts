@@ -9,6 +9,7 @@ export const emailJobSchema = z.object({
   to: z.email(),
   subject: z.string().min(1),
   html: z.string().min(1),
+  text: z.string().optional(),
   replyTo: z.email().optional(),
 });
 export type EmailJob = z.infer<typeof emailJobSchema>;

@@ -17,6 +17,7 @@ export function createEmailSender(env: WorkerEnv, fetchImpl: typeof fetch = fetc
           to: [job.to],
           subject: job.subject,
           html: job.html,
+          ...(job.text ? { text: job.text } : {}),
           ...(job.replyTo ? { reply_to: job.replyTo } : {}),
         }),
       });
@@ -27,6 +28,6 @@ export function createEmailSender(env: WorkerEnv, fetchImpl: typeof fetch = fetc
 
   const transport = nodemailer.createTransport({ host: env.SMTP_HOST, port: env.SMTP_PORT, secure: false });
   return async (job) => {
-    await transport.sendMail({ from: env.EMAIL_FROM, to: job.to, subject: job.subject, html: job.html, replyTo: job.replyTo });
+    await transport.sendMail({ from: env.EMAIL_FROM, to: job.to, subject: job.subject, html: job.html, text: job.text, replyTo: job.replyTo });
   };
 }
