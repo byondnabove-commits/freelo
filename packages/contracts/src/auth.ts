@@ -23,4 +23,6 @@ export type Me = {
   user: { id: string; name: string; email: string; locale: Locale; emailVerified: boolean };
   memberships: { organizationId: string; name: string; role: Role }[];
   activeOrganizationId: string | null;
+  /** Onboarding of the active workspace. `completed` is always true for non-owners: members are never blocked. */
+  onboarding: { completed: boolean; step: number } | null;
 };

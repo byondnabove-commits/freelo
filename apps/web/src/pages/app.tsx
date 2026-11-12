@@ -8,6 +8,7 @@ import { NavLink, Outlet, useNavigate } from "react-router";
 import { Alert, Button, Field, Spinner } from "@/components/ui";
 import { api, unwrap } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
+import { clearAllDrafts } from "@/lib/draft";
 import { errorMessage } from "@/lib/errors";
 import { useMe, useRefreshMe } from "@/lib/me";
 
@@ -75,6 +76,7 @@ export function AppShell() {
             variant="ghost"
             className="justify-start"
             onClick={async () => {
+              clearAllDrafts(me.user.id);
               await authClient.signOut();
               await refresh();
               navigate("/login");

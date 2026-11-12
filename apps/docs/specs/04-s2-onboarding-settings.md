@@ -3,7 +3,7 @@
 **Status:** Draft (2026-11-11). Slice S2 of the rebuild (`02-architecture.md` §19).
 **Builds on:** S1 (auth, workspaces, members).
 **Decision behind this spec:** onboarding is a **short multi-step form** (3 steps), not an AI conversation. No AI API account exists yet. The form keeps a hook so AI can be added later without a redesign (§4.2).
-**Done when:** a verified user finishes onboarding in about 2 minutes with a named workspace, an optional logo and a priced service catalog. Settings hold everything documents need later (legal identity, payment details, tax mode), and the app knows exactly which of those are still missing.
+**Done when:** a verified user finishes onboarding in about 2 minutes with a named workspace, an optional logo and a list of skills (services without prices). Settings hold everything documents need later (legal identity, payment details, tax mode), and the app knows exactly which of those are still missing.
 
 ---
 
@@ -35,7 +35,7 @@
 After email verification, a user with no workspace lands on `/onboarding`. A user who already has a workspace never sees onboarding again (invited members skip it entirely).
 
 ```
-Step 1 — Your business  →  Step 2 — What you sell  →  Step 3 — How you work  →  Ready
+Step 1 — Your business  →  Step 2 — Your skills  →  Step 3 — How you work  →  Ready
    (creates workspace)        (skippable)                (skippable)
 ```
 
@@ -69,12 +69,11 @@ A left stepper shows the 3 steps (the Figma layout is kept). "Back" never loses 
 
 "Continue" creates the workspace (S1's `POST /api/v1/workspaces`: organization + owner + `workspace.created` event) and its profile in one transaction, and sets it active. This **replaces** S1's separate "create workspace" screen.
 
-### 4.2 Step 2 — What you sell (skippable)
-- Chips with common services, one click to add: Brand identity · Logo · Website · Social media management · UI/UX design · Photography · Video / motion · Copywriting · Printing design. Plus "Add your own".
-- Each added service is a row: **name** (editable) and **starting price in DA** (optional), with a unit: per project (default), per day, per month, per item.
-- Up to 20 services here. More can be added in the catalog later.
-- Saved as real `services` rows. They feed devis (S6) and the intake form's "service needed" field (S5).
-- **AI hook (later):** a collapsed "Or describe what you do" text box, shown only when an AI provider is configured (`AI_PROVIDER` env set). Its output fills the same rows, which the user reviews. Hidden in this slice.
+### 4.2 Step 2 — Your skills (skippable)
+- **Skills only, no prices** (owner decision 2026-11-12: prices are set later, on each devis). Tap a chip to select or unselect it: Brand identity · Logo · Website · Social media management · UI/UX design · Photography · Video / motion · Copywriting · Print design. Plus "Add your own skill" (name only).
+- Up to 20 skills here.
+- Saved as `services` rows with no price (`price = null`, unit `project`). Prices and units are edited later in the catalog or directly on a devis (S6). They also feed the intake form's "service needed" field (S5).
+- **AI hook (later):** a collapsed "Or describe what you do" text box, shown only when an AI provider is configured (`AI_PROVIDER` env set). Its output fills the same list, which the user reviews. Hidden in this slice.
 
 ### 4.3 Step 3 — How you work (skippable)
 | Field | Options |
@@ -203,7 +202,7 @@ Guard: business routes (S3+) require `onboarding_completed_at` for **owners** of
 
 1. Sign-up → verify → `/onboarding` → step 1 creates the workspace, profile and owner in one transaction.
 2. Steps 2 and 3 can be skipped. Refreshing at any step resumes there with the answers kept. Unconfirmed edits come back on the same browser, the draft is cleared after "Continue" and sign-out, and the form still works with storage blocked.
-3. Services from step 2 appear in the catalog with prices in centimes, shown as DA.
+3. Skills from step 2 appear in the catalog as services without a price.
 4. An invited member never sees onboarding.
 5. A logo over 2 MB, an SVG, or a file renamed to `.png` that isn't a PNG is rejected with a clear error.
 6. `missingFor` returns the right fields for devis and facture, covered by unit tests for every field.

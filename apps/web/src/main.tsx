@@ -4,38 +4,43 @@ import "./i18n";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from "react-router";
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useSearchParams } from "react-router";
 
 import { Spinner } from "@/components/ui";
 import { useMe } from "@/lib/me";
 import { AppShell, MembersPage, TodayPage } from "@/pages/app";
 import { ForgotPasswordPage, LoginPage, ResetPasswordPage, SignupPage, VerifyEmailPage } from "@/pages/auth";
-import { CreateWorkspacePage, InvitationPage, SelectWorkspacePage } from "@/pages/workspace";
+import { OnboardingPage } from "@/pages/onboarding";
+import { InvitationPage, SelectWorkspacePage } from "@/pages/workspace";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
 });
 
-/** Auth pages: a signed-in user goes to the app. */
+/** Auth pages: a signed-in user goes to `next` (same-site paths only) or the app. */
 function GuestOnly() {
   const me = useMe();
+  const [params] = useSearchParams();
   if (me.isPending) return <Spinner />;
-  return me.data ? <Navigate to="/app" replace /> : <Outlet />;
+  const next = params.get("next");
+  const target = next?.startsWith("/") && !next.startsWith("//") ? next : "/app";
+  return me.data ? <Navigate to={target} replace /> : <Outlet />;
 }
 
 function RequireAuth() {
   const me = useMe();
   const location = useLocation();
   if (me.isPending) return <Spinner />;
-  if (!me.data) return <Navigate to={`/login?next=${encodeURIComponent(location.pathname)}`} replace />;
+  if (!me.data) return <Navigate to={`/login?next=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   return <Outlet />;
 }
 
-/** No workspace → onboarding; several and none active → picker (03-s1 §4). */
+/** No workspace or unfinished onboarding (owners) → onboarding; several and none active → picker. */
 function RequireWorkspace() {
   const me = useMe().data!;
   if (me.memberships.length === 0) return <Navigate to="/onboarding" replace />;
   if (!me.activeOrganizationId) return <Navigate to="/workspace/select" replace />;
+  if (me.onboarding && !me.onboarding.completed) return <Navigate to="/onboarding" replace />;
   return <Outlet />;
 }
 
@@ -53,7 +58,7 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/invitations/:id" element={<InvitationPage />} />
           <Route element={<RequireAuth />}>
-            <Route path="/onboarding" element={<CreateWorkspacePage />} />
+            <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/workspace/select" element={<SelectWorkspacePage />} />
             <Route element={<RequireWorkspace />}>
               <Route path="/app" element={<AppShell />}>

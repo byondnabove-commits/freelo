@@ -15,6 +15,13 @@
       "when": 1794428204653,
       "tag": "0001_auth_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794486239520,
+      "tag": "0002_workspace_profile",
+      "breakpoints": true
     }
   ]
 }

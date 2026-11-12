@@ -8,5 +8,7 @@ export const ACTIVITY_TYPES = [
   "member.joined",
   "member.removed",
   "member.left",
+  "onboarding.completed",
+  "workspace.profile_updated",
 ] as const;
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];

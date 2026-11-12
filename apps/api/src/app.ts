@@ -12,6 +12,7 @@ import { env } from "./env";
 import { handleError, handleNotFound } from "./lib/errors";
 import { loadSession } from "./middleware/auth";
 import { rateLimit } from "./middleware/rate-limit";
+import { logoRoutes, onboardingRoutes, publicLogoRoutes } from "./modules/profile/routes";
 import { meRoutes, publicInvitationRoutes, workspaceRoutes } from "./modules/workspace/routes";
 
 export type { AppEnv };
@@ -35,7 +36,10 @@ const app = new Hono<AppEnv>()
   .use("/api/v1/public/*", rateLimit(60))
   .use("/api/v1/*", loadSession)
   .route("/api/v1/public/invitations", publicInvitationRoutes)
+  .route("/api/v1/public/logos", publicLogoRoutes)
   .route("/api/v1", meRoutes)
+  .route("/api/v1/onboarding", onboardingRoutes)
+  .route("/api/v1/workspace/logo", logoRoutes)
   .route("/api/v1/workspace", workspaceRoutes)
   .get("/health", async (c) => {
     try {

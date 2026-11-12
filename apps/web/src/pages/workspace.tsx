@@ -1,52 +1,14 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router";
 
-import { Alert, AuthCard, Button, Field, Spinner } from "@/components/ui";
+import { Alert, AuthCard, Button, Spinner } from "@/components/ui";
 import { api, unwrap } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
+import { clearAllDrafts } from "@/lib/draft";
 import { errorMessage } from "@/lib/errors";
 import { useMe, useRefreshMe } from "@/lib/me";
-
-/** Onboarding step 1 (S1 minimal version; S2 adds the other steps). */
-export function CreateWorkspacePage() {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const refresh = useRefreshMe();
-  const create = useMutation({
-    mutationFn: (name: string) => unwrap(api.api.v1.workspaces.$post({ json: { name } })),
-    onSuccess: async () => {
-      await refresh();
-      navigate("/app");
-    },
-  });
-
-  function onSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    create.mutate(String(new FormData(e.currentTarget).get("name") ?? "").trim());
-  }
-
-  return (
-    <AuthCard title={t("workspace.new.title")} subtitle={t("workspace.new.subtitle")}>
-      <form className="flex flex-col gap-4" onSubmit={onSubmit}>
-        {create.error ? <Alert>{errorMessage(t, create.error)}</Alert> : null}
-        <Field
-          label={t("workspace.new.label")}
-          name="name"
-          placeholder={t("workspace.new.placeholder")}
-          required
-          minLength={2}
-          maxLength={80}
-          autoFocus
-        />
-        <Button type="submit" disabled={create.isPending}>
-          {t("workspace.new.submit")}
-        </Button>
-      </form>
-    </AuthCard>
-  );
-}
 
 export function SelectWorkspacePage() {
   const { t } = useTranslation();
@@ -70,7 +32,7 @@ export function SelectWorkspacePage() {
           <span className="text-xs text-neutral-500">{t(`workspace.role.${m.role}`)}</span>
         </Button>
       ))}
-      <Link to="/onboarding" className="text-center text-sm underline">
+      <Link to="/onboarding?new=1" className="text-center text-sm underline">
         {t("workspace.select.create")}
       </Link>
     </AuthCard>
@@ -140,6 +102,7 @@ export function InvitationPage() {
             disabled={signingOut}
             onClick={async () => {
               setSigningOut(true);
+              if (user) clearAllDrafts(user.id);
               await authClient.signOut();
               await refresh();
               setSigningOut(false);
