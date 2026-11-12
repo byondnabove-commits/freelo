@@ -10,7 +10,8 @@
     "db:generate": "pnpm --filter @freelo/db generate",
     "db:migrate": "pnpm --filter @freelo/db migrate",
     "dev:services": "docker compose -f docker/compose.dev.yml up -d",
-    "dev:services:down": "docker compose -f docker/compose.dev.yml down"
+    "dev:services:down": "docker compose -f docker/compose.dev.yml down",
+    "db:studio": "pnpm --filter @freelo/db studio"
   },
   "engines": {
     "node": ">=22"

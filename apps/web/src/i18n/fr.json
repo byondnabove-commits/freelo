@@ -24,13 +24,14 @@
     "login": {
       "title": "Bon retour",
       "subtitle": "Connectez-vous à votre espace.",
-      "submit": "Se connecter",
+      "submit": "Me connecter",
       "forgot": "Mot de passe oublié ?",
       "noAccount": "Pas encore de compte ?",
       "signUp": "Créer un compte",
       "notVerified": "Confirmez d'abord votre email. Nous pouvons renvoyer le lien.",
       "resend": "Renvoyer le lien",
-      "invalid": "Email ou mot de passe incorrect."
+      "invalid": "Email ou mot de passe incorrect.",
+      "googleFailed": "La connexion avec Google a échoué. Réessayez ou utilisez votre email."
     },
     "signup": {
       "title": "Créez votre compte",
@@ -42,7 +43,9 @@
       "consent": "J'accepte les Conditions d'utilisation et la Politique de confidentialité.",
       "consentRequired": "Veuillez accepter les Conditions et la Politique de confidentialité.",
       "exists": "Un compte existe déjà avec cet email.",
-      "weakPassword": "Ce mot de passe est trop court ou a fuité dans une violation de données. Choisissez-en un autre."
+      "weakPassword": "Ce mot de passe est trop court ou a fuité dans une violation de données. Choisissez-en un autre.",
+      "nameRequired": "Saisissez votre nom complet.",
+      "emailInvalid": "Saisissez une adresse email valide."
     },
     "verify": {
       "title": "Vérifiez votre boîte mail",
@@ -62,6 +65,13 @@
       "submit": "Enregistrer le mot de passe",
       "done": "Mot de passe modifié. Vous pouvez vous connecter.",
       "invalid": "Ce lien a expiré ou a déjà été utilisé."
+    },
+    "show": "Afficher",
+    "hide": "Masquer",
+    "google": {
+      "signIn": "Se connecter avec Google",
+      "signUp": "S'inscrire avec Google",
+      "consent": "En continuant avec Google, vous acceptez les Conditions et la Politique de confidentialité."
     }
   },
   "workspace": {

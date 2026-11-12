@@ -24,13 +24,14 @@
     "login": {
       "title": "Welcome back",
       "subtitle": "Sign in to your workspace.",
-      "submit": "Sign in",
+      "submit": "Sign in to my account",
       "forgot": "Forgot your password?",
       "noAccount": "No account yet?",
       "signUp": "Create one",
       "notVerified": "Confirm your email first. We can send the link again.",
       "resend": "Resend the link",
-      "invalid": "Wrong email or password."
+      "invalid": "Wrong email or password.",
+      "googleFailed": "Google sign-in didn't work. Try again or use your email."
     },
     "signup": {
       "title": "Create your account",
@@ -42,7 +43,9 @@
       "consent": "I accept the Terms and the Privacy policy.",
       "consentRequired": "Please accept the Terms and the Privacy policy.",
       "exists": "An account already exists with this email.",
-      "weakPassword": "This password is too short or has appeared in a data breach. Choose another one."
+      "weakPassword": "This password is too short or has appeared in a data breach. Choose another one.",
+      "nameRequired": "Enter your full name.",
+      "emailInvalid": "Enter a valid email address."
     },
     "verify": {
       "title": "Check your inbox",
@@ -62,6 +65,13 @@
       "submit": "Save the new password",
       "done": "Password changed. You can sign in now.",
       "invalid": "This link has expired or was already used."
+    },
+    "show": "Show",
+    "hide": "Hide",
+    "google": {
+      "signIn": "Sign in with Google",
+      "signUp": "Sign up with Google",
+      "consent": "By continuing with Google, you accept the Terms and the Privacy policy."
     }
   },
   "workspace": {
