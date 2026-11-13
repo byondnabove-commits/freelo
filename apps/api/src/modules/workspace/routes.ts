@@ -2,6 +2,7 @@ import {
   createWorkspaceSchema,
   inviteMemberSchema,
   setActiveWorkspaceSchema,
+  type Me,
 } from "@freelo/contracts/auth";
 import { Hono } from "hono";
 
@@ -9,6 +10,7 @@ import type { AppEnv } from "../../app-env";
 import { validate } from "../../lib/validate";
 import { requireAuth, requireOrg, requirePermission } from "../../middleware/auth";
 import { rateLimit } from "../../middleware/rate-limit";
+import { profileService } from "../profile/service";
 import { workspaceService } from "./service";
 
 // Non-null after requireAuth.
@@ -22,7 +24,10 @@ const who = (c: { get(key: "user"): AppEnv["Variables"]["user"]; get(key: "sessi
 export const meRoutes = new Hono<AppEnv>()
   .get("/me", requireAuth, async (c) => {
     const { user, session } = who(c);
-    return c.json({ data: await workspaceService.me(user, session) });
+    const me = await workspaceService.me(user, session);
+    const active = me.memberships.find((m) => m.organizationId === me.activeOrganizationId);
+    const onboarding = active ? await profileService.onboardingStatus(active.organizationId, active.role) : null;
+    return c.json({ data: { ...me, onboarding } satisfies Me });
   })
   .post("/workspaces", requireAuth, validate("json", createWorkspaceSchema), async (c) => {
     const { user, session } = who(c);

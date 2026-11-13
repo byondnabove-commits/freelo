@@ -8,7 +8,7 @@ import { hasTestDb } from "../../test/setup";
 
 import { activityService } from "./service";
 
-// Integration tests: need TEST_DATABASE_URL (docker compose dev stack, or CI's Postgres service).
+// Integration tests: need TEST_DATABASE_URL (Neon, docker compose dev stack, or CI's Postgres service).
 describe.skipIf(!hasTestDb)("activity (integration)", () => {
   const orgA = `org_${uuidv7()}`;
   const orgB = `org_${uuidv7()}`;

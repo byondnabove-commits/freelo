@@ -55,7 +55,8 @@ export const workspaceService = {
     return { status: "ok", organizationId: only.organizationId, ...m };
   },
 
-  async me(user: CurrentUser, session: CurrentSession): Promise<Me> {
+  /** /me without the onboarding status, which the profile module adds. */
+  async me(user: CurrentUser, session: CurrentSession): Promise<Omit<Me, "onboarding">> {
     const active = await this.resolveActive(user.id, session);
     const memberships = await repo.listMembershipsForUser(db, user.id);
     return {
@@ -77,6 +78,7 @@ export const workspaceService = {
     const organizationId = uuidv7();
     await db.transaction(async (tx) => {
       await repo.insertOrganization(tx, { id: organizationId, name, slug: slugify(name) });
+      await repo.insertProfile(tx, organizationId);
       await repo.insertMember(tx, organizationId, { id: uuidv7(), userId: user.id, role: "owner" });
       await activityService.record(tx, organizationId, {
         actor: memberActor(user.id),
@@ -87,6 +89,10 @@ export const workspaceService = {
     });
     await repo.setSessionActiveOrganization(db, sessionId, organizationId);
     return { organizationId, name };
+  },
+
+  async rename(organizationId: string, name: string) {
+    await repo.renameOrganization(db, organizationId, name);
   },
 
   async setActive(userId: string, sessionId: string, organizationId: string) {

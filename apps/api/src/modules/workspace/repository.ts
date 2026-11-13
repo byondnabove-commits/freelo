@@ -11,6 +11,15 @@ export const workspaceRepository = {
     await tx.insert(organization).values(org /* tenancy-exempt: this row is the tenant */);
   },
 
+  /** Every workspace has exactly one profile, created with it (04-s2 §7). */
+  async insertProfile(tx: DbOrTx, organizationId: string) {
+    await tx.insert(schema.organizationProfile).values({ organizationId });
+  },
+
+  async renameOrganization(db: DbOrTx, organizationId: string, name: string) {
+    await db.update(organization).set({ name }).where(eq(organization.id, organizationId));
+  },
+
   async insertMember(tx: DbOrTx, organizationId: string, m: { id: string; userId: string; role: Role }) {
     await tx.insert(member).values({ ...m, organizationId });
   },

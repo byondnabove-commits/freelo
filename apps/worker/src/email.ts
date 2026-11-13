@@ -5,7 +5,7 @@ import type { WorkerEnv } from "./env";
 
 export type SendEmail = (job: EmailJob) => Promise<void>;
 
-// Provider chosen by environment: Mailpit over SMTP in development, Resend in production.
+// Provider chosen by environment: console or Mailpit (SMTP) in development, Resend in production.
 export function createEmailSender(env: WorkerEnv, fetchImpl: typeof fetch = fetch): SendEmail {
   if (env.EMAIL_PROVIDER === "resend") {
     return async (job) => {
@@ -23,6 +23,13 @@ export function createEmailSender(env: WorkerEnv, fetchImpl: typeof fetch = fetc
       });
       // Throwing lets pg-boss retry the job.
       if (!res.ok) throw new Error(`Resend responded ${res.status}: ${await res.text()}`);
+    };
+  }
+
+  if (env.EMAIL_PROVIDER === "console") {
+    // Dev without Mailpit: print the email so links (verify, reset) open from the worker log.
+    return async (job) => {
+      console.log(`\n--- email to ${job.to}: ${job.subject}\n${job.text ?? job.html}\n---\n`);
     };
   }
 

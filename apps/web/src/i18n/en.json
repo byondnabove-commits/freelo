@@ -24,13 +24,14 @@
     "login": {
       "title": "Welcome back",
       "subtitle": "Sign in to your workspace.",
-      "submit": "Sign in",
+      "submit": "Sign in to my account",
       "forgot": "Forgot your password?",
       "noAccount": "No account yet?",
       "signUp": "Create one",
       "notVerified": "Confirm your email first. We can send the link again.",
       "resend": "Resend the link",
-      "invalid": "Wrong email or password."
+      "invalid": "Wrong email or password.",
+      "googleFailed": "Google sign-in didn't work. Try again or use your email."
     },
     "signup": {
       "title": "Create your account",
@@ -42,7 +43,9 @@
       "consent": "I accept the Terms and the Privacy policy.",
       "consentRequired": "Please accept the Terms and the Privacy policy.",
       "exists": "An account already exists with this email.",
-      "weakPassword": "This password is too short or has appeared in a data breach. Choose another one."
+      "weakPassword": "This password is too short or has appeared in a data breach. Choose another one.",
+      "nameRequired": "Enter your full name.",
+      "emailInvalid": "Enter a valid email address."
     },
     "verify": {
       "title": "Check your inbox",
@@ -62,6 +65,13 @@
       "submit": "Save the new password",
       "done": "Password changed. You can sign in now.",
       "invalid": "This link has expired or was already used."
+    },
+    "show": "Show",
+    "hide": "Hide",
+    "google": {
+      "signIn": "Sign in with Google",
+      "signUp": "Sign up with Google",
+      "consent": "By continuing with Google, you accept the Terms and the Privacy policy."
     }
   },
   "workspace": {
@@ -125,5 +135,80 @@
     "RATE_LIMITED": "Too many attempts. Wait a minute and try again.",
     "PLAN_LIMIT_REACHED": "Your plan's limit is reached.",
     "INTERNAL_ERROR": "Something went wrong. Try again."
+  },
+  "onboarding": {
+    "steps": {
+      "business": "Your business",
+      "services": "Your skills",
+      "work": "How you work",
+      "ready": "Ready"
+    },
+    "stepOf": "Step {{n}} of {{total}}",
+    "back": "Back",
+    "skip": "Skip for now",
+    "finish": "Finish setup",
+    "restored": "We restored the changes you hadn't saved.",
+    "undo": "Undo",
+    "business": {
+      "title": "Let's set up your business",
+      "subtitle": "This is what your clients will see. You can change it later.",
+      "name": "Business name",
+      "nameRequired": "Enter a name of at least 2 characters.",
+      "logo": "Upload your logo",
+      "logoHint": "PNG, JPEG or WebP, max 2 MB. Optional.",
+      "logoType": "The logo must be a PNG, JPEG or WebP image.",
+      "logoSize": "The logo must be 2 MB or less."
+    },
+    "services": {
+      "title": "What do you do?",
+      "subtitle": "Pick your skills. You'll set prices later, on each quote (devis).",
+      "custom": "Add your own skill",
+      "chips": {
+        "brandIdentity": "Brand identity",
+        "logo": "Logo",
+        "website": "Website",
+        "socialMedia": "Social media management",
+        "uiux": "UI/UX design",
+        "photography": "Photography",
+        "video": "Video / motion",
+        "copywriting": "Copywriting",
+        "print": "Print design"
+      },
+      "customPlaceholder": "e.g. Packaging design",
+      "add": "Add",
+      "tooMany": "You can add up to {{max}} skills here."
+    },
+    "work": {
+      "title": "How do you work?",
+      "subtitle": "This helps us set up FreeLo for you.",
+      "team": "Your team",
+      "teamSizes": {
+        "solo": "Solo, just me",
+        "small_team": "Small team (2–5)",
+        "agency": "Agency (6+)"
+      },
+      "invites": "Invite your teammates (optional)",
+      "invitesHint": "Up to {{max}} emails, separated by commas.",
+      "tooManyInvites": "You can invite up to {{max}} people here. Invite more later from Members.",
+      "inviteInvalid": "One of the emails doesn't look right.",
+      "budget": "Typical project budget",
+      "budgets": {
+        "under_50k": "Under 50 000 DA",
+        "50k_150k": "50 000 – 150 000 DA",
+        "150k_500k": "150 000 – 500 000 DA",
+        "over_500k": "Over 500 000 DA",
+        "varies": "It varies"
+      }
+    },
+    "ready": {
+      "title": "Your workspace is ready",
+      "subtitle": "{{name}} is set up. Here's what's next.",
+      "items": {
+        "business": "Business set up",
+        "services": "Skills added",
+        "details": "Complete your business details (legal identity, payment details)"
+      },
+      "cta": "Go to my dashboard"
+    }
   }
 }

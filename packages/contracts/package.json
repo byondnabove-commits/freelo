@@ -8,7 +8,8 @@
     "./errors": "./src/errors.ts",
     "./pagination": "./src/pagination.ts",
     "./jobs": "./src/jobs.ts",
-    "./auth": "./src/auth.ts"
+    "./auth": "./src/auth.ts",
+    "./onboarding": "./src/onboarding.ts"
   },
   "scripts": {
     "typecheck": "tsc"

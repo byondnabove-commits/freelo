@@ -3,7 +3,8 @@ import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router";
 
-import { Alert, AuthCard, Button, Field } from "@/components/ui";
+import { AuthField, AuthLayout, Divider, GoogleButton } from "@/components/auth-layout";
+import { Alert, Button } from "@/components/ui";
 import { authClient, here } from "@/lib/auth-client";
 import { errorMessage } from "@/lib/errors";
 import { useRefreshMe } from "@/lib/me";
@@ -17,19 +18,28 @@ function safeNext(next: string | null): string | null {
   return next && next.startsWith("/") && !next.startsWith("//") ? next : null;
 }
 
-function GoogleButton({ next }: { next: string | null }) {
+const linkClass = "font-medium text-neutral-900 underline underline-offset-4";
+
+function Google({ label, next }: { label: string; next: string | null }) {
   const { t } = useTranslation();
+  const [busy, setBusy] = useState(false);
   if (!googleEnabled) return null;
   return (
     <>
-      <div className="text-center text-xs uppercase text-neutral-400">{t("common.or")}</div>
-      <Button
-        type="button"
-        variant="secondary"
-        onClick={() => void authClient.signIn.social({ provider: "google", callbackURL: here(next ?? "/app") })}
-      >
-        {t("common.google")}
-      </Button>
+      <Divider label={t("common.or")} />
+      <GoogleButton
+        label={label}
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          const { error } = await authClient.signIn.social({
+            provider: "google",
+            callbackURL: here(next ?? "/app"),
+            errorCallbackURL: here("/login?error=google"),
+          });
+          if (error) setBusy(false);
+        }}
+      />
     </>
   );
 }
@@ -40,7 +50,7 @@ export function LoginPage() {
   const refresh = useRefreshMe();
   const [params] = useSearchParams();
   const next = safeNext(params.get("next"));
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(params.get("error") ? t("auth.login.googleFailed") : null);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -65,8 +75,8 @@ export function LoginPage() {
   }
 
   return (
-    <AuthCard title={t("auth.login.title")} subtitle={t("auth.login.subtitle")}>
-      <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
+    <AuthLayout title={t("auth.login.title")} subtitle={t("auth.login.subtitle")}>
+      <form className="flex flex-col gap-5" onSubmit={onSubmit} noValidate>
         {error ? <Alert>{error}</Alert> : null}
         {unverifiedEmail ? (
           <Alert tone="info">
@@ -76,23 +86,23 @@ export function LoginPage() {
             </Link>
           </Alert>
         ) : null}
-        <Field label={t("common.email")} name="email" type="email" autoComplete="email" required defaultValue={params.get("email") ?? ""} />
-        <Field label={t("common.password")} name="password" type="password" autoComplete="current-password" required />
-        <Link to="/forgot-password" className="self-end text-sm text-neutral-600 underline">
-          {t("auth.login.forgot")}
-        </Link>
-        <Button type="submit" disabled={busy}>
+        <AuthField label={t("common.email")} name="email" type="email" autoComplete="email" required defaultValue={params.get("email") ?? ""} />
+        <AuthField label={t("common.password")} name="password" type="password" autoComplete="current-password" required />
+        <Button type="submit" className="h-11" disabled={busy}>
           {t("auth.login.submit")}
         </Button>
+        <Link to="/forgot-password" className="text-center text-sm text-neutral-700 underline underline-offset-4">
+          {t("auth.login.forgot")}
+        </Link>
       </form>
-      <GoogleButton next={next} />
+      <Google label={t("auth.google.signIn")} next={next} />
       <p className="text-center text-sm text-neutral-600">
         {t("auth.login.noAccount")}{" "}
-        <Link className="font-medium text-green-700 underline" to={`/signup${window.location.search}`}>
+        <Link className={linkClass} to={`/signup${window.location.search}`}>
           {t("auth.login.signUp")}
         </Link>
       </p>
-    </AuthCard>
+    </AuthLayout>
   );
 }
 
@@ -106,14 +116,15 @@ export function SignupPage() {
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const data = new FormData(e.currentTarget);
     const name = formValue(e, "name");
     const email = formValue(e, "email");
-    const password = String(new FormData(e.currentTarget).get("password") ?? "");
+    const password = String(data.get("password") ?? "");
     const found: Record<string, string> = {};
-    if (name.length < 2) found.name = t("errors.VALIDATION_FAILED");
-    if (!email.includes("@")) found.email = t("errors.VALIDATION_FAILED");
+    if (name.length < 2) found.name = t("auth.signup.nameRequired");
+    if (!email.includes("@")) found.email = t("auth.signup.emailInvalid");
     if (password.length < PASSWORD_MIN) found.password = t("auth.signup.passwordHint");
-    if (!new FormData(e.currentTarget).get("consent")) found.consent = t("auth.signup.consentRequired");
+    if (!data.get("consent")) found.consent = t("auth.signup.consentRequired");
     setErrors(found);
     if (Object.keys(found).length) return;
 
@@ -138,12 +149,12 @@ export function SignupPage() {
   }
 
   return (
-    <AuthCard title={t("auth.signup.title")} subtitle={t("auth.signup.subtitle")}>
-      <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
+    <AuthLayout title={t("auth.signup.title")} subtitle={t("auth.signup.subtitle")}>
+      <form className="flex flex-col gap-5" onSubmit={onSubmit} noValidate>
         {errors.form ? <Alert>{errors.form}</Alert> : null}
-        <Field label={t("common.name")} name="name" autoComplete="name" required error={errors.name} />
-        <Field label={t("common.email")} name="email" type="email" autoComplete="email" required defaultValue={params.get("email") ?? ""} error={errors.email} />
-        <Field
+        <AuthField label={t("common.name")} name="name" autoComplete="name" required error={errors.name} />
+        <AuthField label={t("common.email")} name="email" type="email" autoComplete="email" required defaultValue={params.get("email") ?? ""} error={errors.email} />
+        <AuthField
           label={t("common.password")}
           name="password"
           type="password"
@@ -153,23 +164,26 @@ export function SignupPage() {
           hint={t("auth.signup.passwordHint")}
           error={errors.password}
         />
-        <label className="flex items-start gap-2 text-sm text-neutral-700">
-          <input type="checkbox" name="consent" className="mt-0.5 accent-green-600" aria-invalid={Boolean(errors.consent)} />
-          <span>{t("auth.signup.consent")}</span>
-        </label>
-        {errors.consent ? <p className="text-sm text-red-600">{errors.consent}</p> : null}
-        <Button type="submit" disabled={busy}>
+        <div className="flex flex-col gap-1">
+          <label className="flex items-start gap-2 text-sm text-neutral-700">
+            <input type="checkbox" name="consent" className="mt-0.5 size-4 accent-green-600" aria-invalid={Boolean(errors.consent)} />
+            <span>{t("auth.signup.consent")}</span>
+          </label>
+          {errors.consent ? <p className="text-sm text-red-600">{errors.consent}</p> : null}
+        </div>
+        <Button type="submit" className="h-11" disabled={busy}>
           {t("auth.signup.submit")}
         </Button>
       </form>
-      <GoogleButton next={next} />
+      <Google label={t("auth.google.signUp")} next={next} />
+      {googleEnabled ? <p className="text-center text-xs text-neutral-500">{t("auth.google.consent")}</p> : null}
       <p className="text-center text-sm text-neutral-600">
         {t("auth.signup.hasAccount")}{" "}
-        <Link className="font-medium text-green-700 underline" to={`/login${window.location.search}`}>
+        <Link className={linkClass} to={`/login${window.location.search}`}>
           {t("auth.signup.signIn")}
         </Link>
       </p>
-    </AuthCard>
+    </AuthLayout>
   );
 }
 
@@ -185,19 +199,19 @@ export function VerifyEmailPage() {
   }
 
   return (
-    <AuthCard title={t("auth.verify.title")} subtitle={email ? t("auth.verify.subtitle", { email }) : undefined}>
+    <AuthLayout title={t("auth.verify.title")} subtitle={email ? t("auth.verify.subtitle", { email }) : undefined}>
       {params.get("error") ? <Alert>{t("auth.verify.expired")}</Alert> : null}
       {status === "sent" ? <Alert tone="success">{t("auth.verify.resent")}</Alert> : null}
       {status === "error" ? <Alert>{t("errors.RATE_LIMITED")}</Alert> : null}
       {email ? (
-        <Button variant="secondary" onClick={() => void resend()}>
+        <Button variant="secondary" className="h-11" onClick={() => void resend()}>
           {t("auth.verify.resend")}
         </Button>
       ) : null}
-      <Link to="/login" className="text-center text-sm underline">
+      <Link to="/login" className="text-center text-sm underline underline-offset-4">
         {t("common.backToLogin")}
       </Link>
-    </AuthCard>
+    </AuthLayout>
   );
 }
 
@@ -218,20 +232,22 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <AuthCard title={t("auth.forgot.title")} subtitle={t("auth.forgot.subtitle")}>
+    <AuthLayout title={t("auth.forgot.title")} subtitle={t("auth.forgot.subtitle")}>
       {sent ? (
         <Alert tone="success">{t("auth.forgot.sent")}</Alert>
       ) : (
-        <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+        <form className="flex flex-col gap-5" onSubmit={onSubmit}>
           {error ? <Alert>{error}</Alert> : null}
-          <Field label={t("common.email")} name="email" type="email" autoComplete="email" required />
-          <Button type="submit">{t("auth.forgot.submit")}</Button>
+          <AuthField label={t("common.email")} name="email" type="email" autoComplete="email" required />
+          <Button type="submit" className="h-11">
+            {t("auth.forgot.submit")}
+          </Button>
         </form>
       )}
-      <Link to="/login" className="text-center text-sm underline">
+      <Link to="/login" className="text-center text-sm underline underline-offset-4">
         {t("common.backToLogin")}
       </Link>
-    </AuthCard>
+    </AuthLayout>
   );
 }
 
@@ -253,12 +269,12 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <AuthCard title={t("auth.reset.title")}>
+    <AuthLayout title={t("auth.reset.title")}>
       {state === "done" ? <Alert tone="success">{t("auth.reset.done")}</Alert> : null}
       {state === "invalid" ? <Alert>{t("auth.reset.invalid")}</Alert> : null}
       {state === "form" ? (
-        <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
-          <Field
+        <form className="flex flex-col gap-5" onSubmit={onSubmit} noValidate>
+          <AuthField
             label={t("common.password")}
             name="password"
             type="password"
@@ -266,12 +282,14 @@ export function ResetPasswordPage() {
             hint={t("auth.signup.passwordHint")}
             error={error}
           />
-          <Button type="submit">{t("auth.reset.submit")}</Button>
+          <Button type="submit" className="h-11">
+            {t("auth.reset.submit")}
+          </Button>
         </form>
       ) : null}
-      <Link to={state === "invalid" ? "/forgot-password" : "/login"} className="text-center text-sm underline">
+      <Link to={state === "invalid" ? "/forgot-password" : "/login"} className="text-center text-sm underline underline-offset-4">
         {state === "invalid" ? t("auth.forgot.submit") : t("common.backToLogin")}
       </Link>
-    </AuthCard>
+    </AuthLayout>
   );
 }

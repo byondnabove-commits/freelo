@@ -8,16 +8,15 @@ Specs live in [`apps/docs/specs/`](apps/docs/specs/). Start with `00-product-fra
 
 - Node 22 (`.nvmrc`)
 - pnpm 10
-- Docker Desktop with WSL 2 (Postgres and Mailpit for local development)
+- A Postgres database: a free [Neon](https://neon.tech) project, or Docker on Linux (`pnpm dev:services`: Postgres :5432, Mailpit :8025)
 
 ## First run
 
 ```bash
 pnpm install
-cp .env.example .env
-pnpm dev:services        # Postgres :5432, Mailpit :8025
+cp .env.example .env     # paste the Neon connection strings
 pnpm db:migrate
-pnpm dev                 # api :3001, worker, web :5173
+pnpm dev                 # api :3001, worker, web :5173 (emails print in the worker log)
 ```
 
 ## Everyday commands
